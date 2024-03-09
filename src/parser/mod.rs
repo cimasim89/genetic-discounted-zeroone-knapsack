@@ -8,13 +8,19 @@ use crate::structure::item::Item;
 use crate::structure::{make_problem, make_item};
 
 
-pub fn parse_input(file_name: String) -> Problem {
-    match utils::read_lines(&file_name) {
-        Err(why) => panic!("couldn't read {}: {}", file_name, why),
-        Ok(lines) =>
-            {
-                collector(lines)
-            }
+pub trait ProblemParser {
+    fn parse_input(file_name: String) -> Self;
+}
+
+impl ProblemParser for Problem {
+    fn parse_input(file_name: String) -> Problem {
+        match utils::read_lines(&file_name) {
+            Err(why) => panic!("couldn't read {}: {}", file_name, why),
+            Ok(lines) =>
+                {
+                    collector(lines)
+                }
+        }
     }
 }
 

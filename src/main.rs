@@ -3,6 +3,8 @@ mod structure;
 use clap::Parser;
 use rand::prelude::*;
 use rand::SeedableRng;
+use crate::parser::*;
+use crate::structure::problem::Problem;
 
 
 #[derive(Parser, Debug)]
@@ -20,7 +22,7 @@ fn main() {
     let mut rng = make_rng(args.seed);
 
     let _times = rng.gen_range(0..100);
-    let _problem = parser::parse_input(args.file_path);
+    let _problem = <Problem as ProblemParser>::parse_input(args.file_path);
 }
 
 
