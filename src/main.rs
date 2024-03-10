@@ -1,8 +1,12 @@
 mod parser;
 mod structure;
+mod utils;
+mod genetic;
+
 use clap::Parser;
 use rand::prelude::*;
 use rand::SeedableRng;
+use crate::genetic::GeneticAlgorithm;
 use crate::parser::*;
 use crate::structure::problem::Problem;
 
@@ -19,13 +23,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let mut rng = make_rng(args.seed);
-
-    let _times = rng.gen_range(0..100);
-    let _problem = <Problem as ProblemParser>::parse_input(args.file_path);
+    let problem = <Problem as ProblemParser>::parse_input(args.file_path);
+    let _solution =  <Problem as GeneticAlgorithm>::run(problem, args.seed);
 }
 
-
-fn make_rng(seed: u64) -> SmallRng {
-    SmallRng::seed_from_u64(seed)
-}
