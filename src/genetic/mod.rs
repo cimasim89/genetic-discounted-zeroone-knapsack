@@ -14,7 +14,7 @@ impl GeneticAlgorithm for Problem {
         println!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ", problem.capacity, problem.size);
         let mut rng = utils::make_rng(seed);
         let population = initialize_population(&problem, &mut rng);
-        let best = evolve(population, &problem, &mut rng);
+        let best = evolve(population, &problem, &mut rng, 0);
         Solution::make_solution(vec![])
     }
 }
@@ -26,8 +26,8 @@ fn initialize_population(problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosom
     vec![]
 }
 
-fn terminate(best: &Chromosome, population: &Vec<Chromosome>) -> bool {
-    best.age > 500
+fn terminate(best: &Chromosome, generation: i32) -> bool {
+    generation > 500
 }
 
 fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
@@ -77,18 +77,18 @@ fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) ->
 }
 
 
-fn evolve<'a>(population: Vec<Chromosome>, problem: &'a Problem, rng: &'a mut SmallRng) -> Chromosome {
+fn evolve<'a>(population: Vec<Chromosome>, problem: &'a Problem, rng: &'a mut SmallRng, generation: i32) -> Chromosome {
     println!("Evolving population size: {}", population.capacity());
 
     let evaluated = evaluate(population, problem);
     let best_solution = evaluated.first().unwrap();
 
-    if terminate(best_solution, &evaluated) {
+    if terminate(best_solution, generation) {
         best_solution.clone()
     } else {
         let selection = select(&evaluated, problem, rng);
         let new_gen = crossover(selection, problem);
         let mutated = mutate(new_gen, problem, rng);
-        evolve(mutated, problem, rng)
+        evolve(mutated, problem, rng, generation + 1)
     }
 }
