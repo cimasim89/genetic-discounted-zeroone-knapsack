@@ -9,11 +9,11 @@ pub struct Chromosome {
 }
 
 impl Chromosome {
-    pub fn init_chromosome(genes: Vec<usize>) -> Self {
+    pub fn init_chromosome(genes: Vec<usize>, size:i32) -> Self {
         Chromosome  {
             genes,
             fitness: 0,
-            size: 0,
+            size,
             age: 0,
         }
     }

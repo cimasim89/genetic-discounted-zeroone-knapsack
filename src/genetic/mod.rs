@@ -6,11 +6,11 @@ use crate::structure::solution::Solution;
 use crate::utils;
 
 pub trait GeneticAlgorithm {
-    fn run(problem: Problem, seed: u64 ) -> Solution;
+    fn run(problem: Problem, seed: u64) -> Solution;
 }
 
 impl GeneticAlgorithm for Problem {
-    fn run(problem: Problem, seed: u64 ) -> Solution {
+    fn run(problem: Problem, seed: u64) -> Solution {
         println!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ", problem.capacity, problem.size);
         let mut rng = utils::make_rng(seed);
         let population = initialize_population(&problem, &mut rng);
@@ -22,8 +22,18 @@ impl GeneticAlgorithm for Problem {
 fn initialize_population(problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Initializing population...");
 
+    let mut population = Vec::new();
 
-    vec![]
+    for _ in 0..100 {
+        let mut genes = Vec::new();
+        for _ in 0..problem.size {
+            // actually 0 is no selection
+            genes.push(rng.gen_range(0..4));
+        }
+        population.push(Chromosome::init_chromosome(genes, problem.size));
+    }
+
+    population
 }
 
 fn terminate(best: &Chromosome, generation: i32) -> bool {
@@ -34,8 +44,14 @@ fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
     let mut fitness = 0;
     let mut cost = 0;
     for (i, gene) in chromosome.genes.iter().enumerate() {
-        fitness += problem.data[i][*gene].gain;
-        cost += problem.data[i][*gene].cost;
+
+        // TODO use a better way to describe no selection
+        if *gene == 0 {
+            continue;
+        }
+
+        fitness += problem.data[i][*gene - 1].gain;
+        cost += problem.data[i][*gene - 1].cost;
     }
     if cost > problem.capacity {
         fitness = 0;
@@ -44,7 +60,7 @@ fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
 }
 
 fn evaluate(population: Vec<Chromosome>, problem: &Problem) -> Vec<Chromosome> {
-    println!("Initializing population...");
+    println!("evaluating population...");
 
     let mut evaluated = population.iter()
         .map(|c| Chromosome::evaluate_chromosome(c, fitness_func(c, problem), c.age + 1))
@@ -61,7 +77,7 @@ fn select(population: &Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -
         let index = rng.gen_range(0..population.len());
         selected.push(population[index].clone());
     }
-    selected
+    population.clone()
 }
 
 fn crossover(population: Vec<Chromosome>, problem: &Problem) -> Vec<Chromosome> {
@@ -78,7 +94,7 @@ fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) ->
 
 
 fn evolve<'a>(population: Vec<Chromosome>, problem: &'a Problem, rng: &'a mut SmallRng, generation: i32) -> Chromosome {
-    println!("Evolving population size: {}", population.capacity());
+    println!("Evolving population generation: {}", generation);
 
     let evaluated = evaluate(population, problem);
     let best_solution = evaluated.first().unwrap();
