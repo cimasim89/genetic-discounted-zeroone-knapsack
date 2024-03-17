@@ -71,13 +71,27 @@ fn evaluate(population: Vec<Chromosome>, problem: &Problem) -> Vec<Chromosome> {
 
 fn select(population: &Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Selecting population...");
+    roulette_wheel_selection(population, rng, population.len() as i32)
+}
 
-    let mut selected = Vec::new();
-    for _ in 0..population.len() {
-        let index = rng.gen_range(0..population.len());
-        selected.push(population[index].clone());
-    }
-    population.clone()
+fn roulette_wheel_selection(population: &Vec<Chromosome>, rng: &mut SmallRng, n:i32) -> Vec<Chromosome> {
+
+    let sum_fitness = population.iter().fold(0, |acc, c| acc + c.fitness);
+
+    (0..n)
+        .map(|_| {
+            let mut slice = rng.gen_range(0..sum_fitness);
+            let mut index = 0;
+            for chromosome in population.iter() {
+                slice -= chromosome.fitness;
+                if slice <= 0 {
+                    break;
+                }
+                index += 1;
+            }
+            population[index].clone()
+        })
+        .collect()
 }
 
 fn crossover(population: Vec<Chromosome>, problem: &Problem) -> Vec<Chromosome> {
