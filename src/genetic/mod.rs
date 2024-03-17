@@ -136,7 +136,22 @@ fn parent_crossover(parent1: &Chromosome, parent2: &Chromosome, problem: &Proble
 fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Mutating population...");
 
-    population
+    let mut new_population = Vec::new();
+
+    population.iter().for_each(|c| {
+
+        if rng.gen_range(0..1000) > 5 {
+            new_population.push(c.clone());
+            return;
+        }
+        let mut genes = c.genes.clone();
+        let index = rng.gen_range(0..genes.len());
+        let gene = rng.gen_range(0..4);
+        genes[index] = gene;
+        new_population.push(Chromosome::init_chromosome(genes, problem.size));
+    });
+
+    new_population
 }
 
 
