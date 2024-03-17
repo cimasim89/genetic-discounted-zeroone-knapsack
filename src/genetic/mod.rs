@@ -1,6 +1,7 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
 use crate::structure::chromosome::Chromosome;
+use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
 use crate::utils;
@@ -15,8 +16,21 @@ impl GeneticAlgorithm for Problem {
         let mut rng = utils::make_rng(seed);
         let population = initialize_population(&problem, &mut rng);
         let best = evolve(population, &problem, &mut rng, 0);
-        Solution::make_solution(vec![])
+        make_solution(&problem, &best)
     }
+}
+
+fn make_solution(problem: &Problem, chromosome: &Chromosome) -> Solution {
+    let mut data: Vec<Item> = Vec::new();
+    let mut cost = 0;
+    for (i, gene) in chromosome.genes.iter().enumerate() {
+        if *gene == 0 {
+            continue;
+        }
+        data.push(problem.data[i][*gene - 1].clone());
+        cost += problem.data[i][*gene - 1].cost;
+    }
+    Solution::make_solution(data, chromosome.fitness, cost)
 }
 
 fn initialize_population(problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
@@ -139,7 +153,6 @@ fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) ->
     let mut new_population = Vec::new();
 
     population.iter().for_each(|c| {
-
         if rng.gen_range(0..1000) > 5 {
             new_population.push(c.clone());
             return;

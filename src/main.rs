@@ -24,6 +24,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
     let problem = <Problem as ProblemParser>::parse_input(args.file_path);
-    let _solution =  <Problem as GeneticAlgorithm>::run(problem, args.seed);
+    let solution =  <Problem as GeneticAlgorithm>::run(problem, args.seed);
+    println!("Solution: {:?}", solution);
 }
 
