@@ -74,8 +74,7 @@ fn select(population: &Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -
     roulette_wheel_selection(population, rng, population.len() as i32)
 }
 
-fn roulette_wheel_selection(population: &Vec<Chromosome>, rng: &mut SmallRng, n:i32) -> Vec<Chromosome> {
-
+fn roulette_wheel_selection(population: &Vec<Chromosome>, rng: &mut SmallRng, n: i32) -> Vec<Chromosome> {
     let sum_fitness = population.iter().fold(0, |acc, c| acc + c.fitness);
 
     (0..n)
@@ -94,10 +93,44 @@ fn roulette_wheel_selection(population: &Vec<Chromosome>, rng: &mut SmallRng, n:
         .collect()
 }
 
-fn crossover(population: Vec<Chromosome>, problem: &Problem) -> Vec<Chromosome> {
+fn crossover(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Crossover population...");
 
-    population
+    let mut new_population = Vec::new();
+
+    for _ in 0..population.len() / 2 {
+        let parent1 = &population[rng.gen_range(0..population.len())];
+        let parent2 = &population[rng.gen_range(0..population.len())];
+
+        let (child1, child2) = parent_crossover(parent1, parent2, problem, rng);
+
+        new_population.push(child1);
+        new_population.push(child2);
+    }
+
+    new_population
+}
+
+fn parent_crossover(parent1: &Chromosome, parent2: &Chromosome, problem: &Problem, rng: &mut SmallRng) -> (Chromosome, Chromosome) {
+    let crossover_point = rng.gen_range(0..parent1.genes.len());
+
+    let mut child1_genes = Vec::new();
+    let mut child2_genes = Vec::new();
+
+    for i in 0..parent1.genes.len() {
+        if i < crossover_point {
+            child1_genes.push(parent1.genes[i]);
+            child2_genes.push(parent2.genes[i]);
+        } else {
+            child1_genes.push(parent2.genes[i]);
+            child2_genes.push(parent1.genes[i]);
+        }
+    }
+
+    let child1 = Chromosome::init_chromosome(child1_genes, problem.size);
+    let child2 = Chromosome::init_chromosome(child2_genes, problem.size);
+
+    (child1, child2)
 }
 
 fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
@@ -117,7 +150,7 @@ fn evolve<'a>(population: Vec<Chromosome>, problem: &'a Problem, rng: &'a mut Sm
         best_solution.clone()
     } else {
         let selection = select(&evaluated, problem, rng);
-        let new_gen = crossover(selection, problem);
+        let new_gen = crossover(selection, problem, rng);
         let mutated = mutate(new_gen, problem, rng);
         evolve(mutated, problem, rng, generation + 1)
     }
