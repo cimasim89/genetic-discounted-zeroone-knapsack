@@ -1,4 +1,3 @@
-use crate::structure::item::Item;
 
 #[derive(Debug, Clone)]
 pub struct Chromosome {

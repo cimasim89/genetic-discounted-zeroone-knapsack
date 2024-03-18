@@ -4,8 +4,6 @@ mod utils;
 mod genetic;
 
 use clap::Parser;
-use rand::prelude::*;
-use rand::SeedableRng;
 use crate::genetic::GeneticAlgorithm;
 use crate::parser::*;
 use crate::structure::problem::Problem;

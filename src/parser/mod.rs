@@ -27,7 +27,7 @@ impl ProblemParser for Problem {
 fn collector(lines: io::Lines<io::BufReader<File>>) -> Problem {
     let ((size, capacity), header_rest) = parse_headers(lines);
     let (gains, gain_rest) = split_groups(header_rest);
-    let (costs, cost_rest) = split_groups(gain_rest);
+    let (costs, _cost_rest) = split_groups(gain_rest);
     let data = make_data(gains, costs);
 
     make_problem(
