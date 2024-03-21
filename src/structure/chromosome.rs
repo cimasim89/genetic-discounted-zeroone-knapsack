@@ -2,7 +2,7 @@
 #[derive(Debug, Clone)]
 pub struct Chromosome {
     pub(crate) genes: Vec<usize>,
-    pub(crate) fitness: i32,
+    pub(crate) fitness: i64,
     pub(crate) size: i32,
     pub(crate) age: i32,
 }
@@ -17,7 +17,7 @@ impl Chromosome {
         }
     }
 
-    pub fn evaluate_chromosome(self: &Self,fitness:i32, age:i32) -> Chromosome {
+    pub fn evaluate_chromosome(self: &Self,fitness:i64, age:i32) -> Chromosome {
         Chromosome  {
             genes: self.genes.clone(),
             fitness,
@@ -26,7 +26,7 @@ impl Chromosome {
         }
     }
 
-    pub fn set_fitness(self: &Self, fitness: i32) -> Chromosome {
+    pub fn set_fitness(self: &Self, fitness: i64) -> Chromosome {
         Chromosome {
             genes: self.genes.clone(),
             fitness,

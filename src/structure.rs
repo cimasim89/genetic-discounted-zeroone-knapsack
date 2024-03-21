@@ -18,8 +18,8 @@ pub fn make_problem(capacity: i32,
     }
 }
 
-pub fn make_item(gain: i32,
-                 cost: i32, ) -> Item {
+pub fn make_item(gain: i64,
+                 cost: i64, ) -> Item {
     Item {
         gain,
         cost,

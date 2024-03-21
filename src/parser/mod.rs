@@ -44,8 +44,8 @@ fn make_data(gains: Vec<String>, costs: Vec<String>) -> Vec<Vec<Item>> {
         let mut group: Vec<Item> = Vec::new();
         for (gain, cost) in group_gains.split_whitespace().zip(group_costs.split_whitespace()) {
             let item = make_item(
-                gain.parse::<i32>().unwrap(),
-                cost.parse::<i32>().unwrap());
+                gain.parse::<i64>().unwrap(),
+                cost.parse::<i64>().unwrap());
             group.push(item);
         }
         data.push(group);

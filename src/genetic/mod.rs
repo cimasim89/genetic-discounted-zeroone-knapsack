@@ -36,9 +36,9 @@ fn make_solution(problem: &Problem, chromosome: &Chromosome) -> Solution {
 
 fn initialize_population(problem: &Problem, configuration: &Box<dyn Configuration>, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Initializing population...");
-
     let mut population = Vec::new();
 
+/*
     for _ in 0..configuration.get_population_size(){
         let mut genes = Vec::new();
         for _ in 0..problem.size {
@@ -46,12 +46,31 @@ fn initialize_population(problem: &Problem, configuration: &Box<dyn Configuratio
             genes.push(rng.gen_range(0..4));
         }
         population.push(Chromosome::init_chromosome(genes, problem.size));
+    }*/
+
+
+    let mut generated = configuration.get_population_size();
+
+    while (generated > 0) {
+        let mut genes = Vec::new();
+        for _ in 0..problem.size {
+            // actually 0 is no selection
+            genes.push(rng.gen_range(0..4));
+        }
+        let chromosome = Chromosome::init_chromosome(genes, problem.size);
+        let fitness = fitness_func(&chromosome, problem);
+        if fitness == 0 {
+            continue
+        }
+        Chromosome::set_fitness(&chromosome,fitness);
+        population.push(chromosome);
+        generated -= 1;
     }
 
     population
 }
 
-fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
+fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i64 {
     let mut fitness = 0;
     let mut cost = 0;
     for (i, gene) in chromosome.genes.iter().enumerate() {
@@ -64,7 +83,7 @@ fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
         fitness += problem.data[i][*gene - 1].gain;
         cost += problem.data[i][*gene - 1].cost;
     }
-    if cost > problem.capacity {
+    if cost > problem.capacity as i64 {
         fitness = 0;
     }
     fitness
@@ -86,7 +105,7 @@ fn select(population: &Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -
 }
 
 fn roulette_wheel_selection(population: &Vec<Chromosome>, rng: &mut SmallRng, n: i32) -> Vec<Chromosome> {
-    let sum_fitness = population.iter().fold(0, |acc, c| acc + c.fitness);
+    let sum_fitness = population.iter().fold(0 as i64, |acc, c| acc + c.fitness);
 
     (0..n)
         .map(|_| {
