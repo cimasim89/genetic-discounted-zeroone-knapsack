@@ -5,6 +5,7 @@ pub(crate) mod problem;
 pub(crate) mod item;
 pub(crate) mod solution;
 pub(crate) mod chromosome;
+pub(crate) mod configuration;
 
 
 pub fn make_problem(capacity: i32,

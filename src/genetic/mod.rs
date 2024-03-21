@@ -4,18 +4,19 @@ use crate::structure::chromosome::Chromosome;
 use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
+use crate::structure::configuration::{Configuration, ConfigurationByGenerations};
 use crate::utils;
 
 pub trait GeneticAlgorithm {
-    fn run(problem: Problem, seed: u64) -> Solution;
+    fn run(problem: Problem, configuration: Box<dyn Configuration>) -> Solution;
 }
 
-impl GeneticAlgorithm for Problem {
-    fn run(problem: Problem, seed: u64) -> Solution {
+impl GeneticAlgorithm for ConfigurationByGenerations {
+    fn run(problem: Problem, configuration: Box<dyn Configuration>) -> Solution {
         println!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ", problem.capacity, problem.size);
-        let mut rng = utils::make_rng(seed);
-        let population = initialize_population(&problem, &mut rng);
-        let best = evolve(population, &problem, &mut rng, 0);
+        let mut rng = utils::make_rng(configuration.get_seed());
+        let population = initialize_population(&problem, &configuration, &mut rng);
+        let best = evolve(population, &problem, &configuration, &mut rng, 0);
         make_solution(&problem, &best)
     }
 }
@@ -33,12 +34,12 @@ fn make_solution(problem: &Problem, chromosome: &Chromosome) -> Solution {
     Solution::make_solution(data, chromosome.fitness, cost)
 }
 
-fn initialize_population(problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
+fn initialize_population(problem: &Problem, configuration: &Box<dyn Configuration>, rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Initializing population...");
 
     let mut population = Vec::new();
 
-    for _ in 0..100 {
+    for _ in 0..configuration.get_population_size(){
         let mut genes = Vec::new();
         for _ in 0..problem.size {
             // actually 0 is no selection
@@ -48,10 +49,6 @@ fn initialize_population(problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosom
     }
 
     population
-}
-
-fn terminate(best: &Chromosome, generation: i32) -> bool {
-    generation > 500
 }
 
 fn fitness_func(chromosome: &Chromosome, problem: &Problem) -> i32 {
@@ -147,7 +144,10 @@ fn parent_crossover(parent1: &Chromosome, parent2: &Chromosome, problem: &Proble
     (child1, child2)
 }
 
-fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) -> Vec<Chromosome> {
+fn mutate(population: Vec<Chromosome>,
+          problem: &Problem,
+          configuration: &Box<dyn Configuration>,
+          rng: &mut SmallRng) -> Vec<Chromosome> {
     println!("Mutating population...");
 
     let mut new_population = Vec::new();
@@ -168,18 +168,22 @@ fn mutate(population: Vec<Chromosome>, problem: &Problem, rng: &mut SmallRng) ->
 }
 
 
-fn evolve<'a>(population: Vec<Chromosome>, problem: &'a Problem, rng: &'a mut SmallRng, generation: i32) -> Chromosome {
+fn evolve<'a>(population: Vec<Chromosome>,
+              problem: &'a Problem,
+              configuration: &'a Box<dyn Configuration>,
+              rng: &'a mut SmallRng,
+              generation: u32) -> Chromosome {
     println!("Evolving population generation: {}", generation);
 
     let evaluated = evaluate(population, problem);
     let best_solution = evaluated.first().unwrap();
 
-    if terminate(best_solution, generation) {
+    if configuration.get_terminate_func()(best_solution, generation) {
         best_solution.clone()
     } else {
         let selection = select(&evaluated, problem, rng);
         let new_gen = crossover(selection, problem, rng);
-        let mutated = mutate(new_gen, problem, rng);
-        evolve(mutated, problem, rng, generation + 1)
+        let mutated = mutate(new_gen, problem,configuration, rng);
+        evolve(mutated, problem, configuration, rng, generation + 1)
     }
 }
