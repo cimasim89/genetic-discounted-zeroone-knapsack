@@ -27,7 +27,7 @@ impl ProblemParser for Problem {
 fn collector(lines: io::Lines<io::BufReader<File>>) -> Problem {
     let ((size, capacity), header_rest) = parse_headers(lines);
     let (gains, gain_rest) = split_groups(header_rest);
-    let (costs, cost_rest) = split_groups(gain_rest);
+    let (costs, _cost_rest) = split_groups(gain_rest);
     let data = make_data(gains, costs);
 
     make_problem(
@@ -44,8 +44,8 @@ fn make_data(gains: Vec<String>, costs: Vec<String>) -> Vec<Vec<Item>> {
         let mut group: Vec<Item> = Vec::new();
         for (gain, cost) in group_gains.split_whitespace().zip(group_costs.split_whitespace()) {
             let item = make_item(
-                gain.parse::<i32>().unwrap(),
-                cost.parse::<i32>().unwrap());
+                gain.parse::<i64>().unwrap(),
+                cost.parse::<i64>().unwrap());
             group.push(item);
         }
         data.push(group);
