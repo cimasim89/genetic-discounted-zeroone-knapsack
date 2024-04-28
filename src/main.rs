@@ -4,9 +4,8 @@ mod utils;
 mod genetic;
 
 use clap::Parser;
-use crate::genetic::GeneticAlgorithm;
+use crate::genetic::{OOPGeneticAlgorithm, OOPGeneticAlgorithmStruct};
 use crate::parser::*;
-use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
 
@@ -16,9 +15,6 @@ use crate::structure::problem::Problem;
 struct Args {
     #[arg(short, long)]
     file_path: String,
-
-    #[arg(short, long, default_value_t = 500)]
-    generations: u32,
 
     #[arg(short, long, default_value_t = 5)]
     mutation_factor: u8,
@@ -30,12 +26,6 @@ struct Args {
     seed: u64,
 }
 
-fn generate_term_func (termination_generations: u32) -> Box<dyn Fn(&Chromosome, u32) -> bool> {
-    Box::new(move |best: &Chromosome, generation: u32| -> bool {
-        generation >= termination_generations
-    })
-}
-
 
 fn main() {
     let args = Args::parse();
@@ -44,9 +34,10 @@ fn main() {
         mutation_factor: args.mutation_factor,
         population_size: args.population_size,
         seed: args.seed,
-        terminate_func: generate_term_func(args.generations),
     };
-    let solution =  <ConfigurationByGenerations as GeneticAlgorithm>::run(problem, Box::new(configuration));
+    let mut executor =  OOPGeneticAlgorithmStruct::new(problem, Box::new(configuration));
+    executor.init();
+    let solution = executor.run();
     println!("Solution: {:?}", solution);
 }
 

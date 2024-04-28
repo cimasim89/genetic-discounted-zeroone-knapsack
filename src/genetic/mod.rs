@@ -4,19 +4,14 @@ use crate::structure::chromosome::Chromosome;
 use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
-use crate::structure::configuration::{Configuration, ConfigurationByGenerations};
+use crate::structure::configuration::Configuration;
 use crate::utils;
 
-pub trait GeneticAlgorithm {
-    fn run(problem: Problem, configuration: Box<dyn Configuration>) -> Solution;
-}
-
 pub trait OOPGeneticAlgorithm {
-    fn init(&self, problem: Problem, configuration: Box<dyn Configuration>);
-    fn run(&self) -> Solution;
+    fn init(&mut self);
+    fn run(&mut self) -> Solution;
 }
 
-#[derive(Debug)]
 pub struct OOPGeneticAlgorithmStruct {
     configuration: Box<dyn Configuration>,
     population: Vec<Chromosome>,
@@ -25,13 +20,24 @@ pub struct OOPGeneticAlgorithmStruct {
 }
 
 impl OOPGeneticAlgorithmStruct {
+
+    pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Box<dyn OOPGeneticAlgorithm> {
+        Box::new(OOPGeneticAlgorithmStruct {
+            rng:utils::make_rng(configuration.get_seed()),
+            configuration,
+            population: vec![],
+            problem,
+        })
+    }
+
+
     fn initialize_population(&mut self) -> Vec<Chromosome> {
         println!("Initializing population...");
         let mut population = Vec::new();
 
         let mut generated = self.configuration.get_population_size();
 
-        while (generated > 0) {
+        while generated > 0 {
             let mut genes = Vec::new();
             for _ in 0..self.problem.size {
                 // actually 0 is no selection
@@ -83,14 +89,14 @@ impl OOPGeneticAlgorithmStruct {
         fitness
     }
 
-    fn evaluate(&self) -> Vec<Chromosome> {
+    fn evaluate(&mut self) {
         println!("evaluating population...");
 
         let mut evaluated = self.population.iter()
             .map(|c| Chromosome::evaluate_chromosome(c, self.fitness_func(c), c.age + 1))
             .collect::<Vec<_>>();
         evaluated.sort_by(|a, b| b.fitness.cmp(&a.fitness));
-        evaluated.clone()
+        self.population = evaluated
     }
 
     fn roulette_wheel_selection(&mut self) {
@@ -145,18 +151,17 @@ impl OOPGeneticAlgorithmStruct {
         let mut new_population = Vec::new();
 
         for _ in 0..self.population.len() / 2 {
-            let parent1 = &self.population[self.rng.gen_range(0..self.population.len())];
-            let parent2 = &self.population[self.rng.gen_range(0..self.population.len())];
+            let parent1 = self.population[self.rng.gen_range(0..self.population.len())].clone();
+            let parent2 = self.population[self.rng.gen_range(0..self.population.len())].clone();
 
-            let (child1, child2) = self.parent_crossover(parent1, parent2);
+            let (child1, child2) = self.parent_crossover(&parent1, &parent2);
 
-            new_population.push(child1);
-            new_population.push(child2);
+            new_population.push(child1.clone());
+            new_population.push(child2.clone());
         }
 
         self.population = new_population;
     }
-
 
     fn mutate(&mut self) {
         println!("Mutating population...");
@@ -178,18 +183,18 @@ impl OOPGeneticAlgorithmStruct {
         self.population = new_population
     }
 
-
     fn evolve(&mut self) -> Chromosome {
-        let mut generation= 0;
-        let mut condiion = true;
+        let mut generation:u32 = 0;
+        let mut condition = true;
+        let mut best: Chromosome = self.population.first_mut().unwrap().clone();
 
-        while(condiion){
+        while condition {
             println!("Evolving population generation: {}", generation);
-            let evaluated = self.evaluate();
-            let best_solution = evaluated.first().unwrap();
+            self.evaluate();
+            best = self.population.first_mut().unwrap().clone();
 
-            if self.configuration.get_terminate_func()(best_solution, generation) {
-                best_solution.clone()
+            if generation >= 500 {
+                condition = false;
             } else {
                 self.select();
                 self.crossover();
@@ -198,18 +203,16 @@ impl OOPGeneticAlgorithmStruct {
             }
         }
 
+        best
+
     }
 }
 
 
 impl OOPGeneticAlgorithm for OOPGeneticAlgorithmStruct {
 
-    fn init(&mut self, problem: Problem, configuration: Box<dyn Configuration>){
-        self.configuration = configuration;
-        self.problem = problem;
-        self.rng = utils::make_rng(
-            self.configuration.get_seed());
-        self.population = self.initialize_population();
+    fn init(&mut self) {
+        self.population = self.initialize_population()
     }
 
     fn run(&mut self) -> Solution {
