@@ -8,6 +8,7 @@ use crate::genetic::{OOPGeneticAlgorithm, OOPGeneticAlgorithmStruct};
 use crate::parser::*;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
+use std::time::Instant;
 
 
 #[derive(Parser, Debug)]
@@ -35,9 +36,12 @@ fn main() {
         population_size: args.population_size,
         seed: args.seed,
     };
+    let now = Instant::now();
     let mut executor =  OOPGeneticAlgorithmStruct::new(problem, Box::new(configuration));
     executor.init();
     let solution = executor.run();
     println!("Solution: {:?}", solution);
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
 
