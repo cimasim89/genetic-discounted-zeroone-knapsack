@@ -9,6 +9,8 @@ use crate::parser::*;
 use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
+use std::time::Instant;
+
 
 
 #[derive(Parser, Debug)]
@@ -46,7 +48,11 @@ fn main() {
         seed: args.seed,
         terminate_func: generate_term_func(args.generations),
     };
+    let now = Instant::now();
     let solution =  <ConfigurationByGenerations as GeneticAlgorithm>::run(problem, Box::new(configuration));
     println!("Solution: {:?}", solution);
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
 
