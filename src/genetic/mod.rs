@@ -13,6 +13,8 @@ pub trait OOPGeneticAlgorithm {
 }
 
 pub struct OOPGeneticAlgorithmStruct {
+    best_fitness: i64,
+    remain_no_improved_generations: u8,
     configuration: Box<dyn Configuration>,
     population: Vec<Chromosome>,
     problem: Problem,
@@ -23,6 +25,8 @@ impl OOPGeneticAlgorithmStruct {
 
     pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Box<dyn OOPGeneticAlgorithm> {
         Box::new(OOPGeneticAlgorithmStruct {
+            best_fitness:0,
+            remain_no_improved_generations: configuration.get_no_upgrade_limit(),
             rng:utils::make_rng(configuration.get_seed()),
             configuration,
             population: vec![],
@@ -183,6 +187,21 @@ impl OOPGeneticAlgorithmStruct {
         self.population = new_population
     }
 
+    fn check_is_end(&mut self,curr_fitness: i64) -> bool{
+        if curr_fitness > self.best_fitness {
+            self.best_fitness = curr_fitness;
+            self.remain_no_improved_generations = self.configuration.get_no_upgrade_limit();
+            return false
+        }
+
+        if self.remain_no_improved_generations > 0 {
+            self.remain_no_improved_generations -= 1;
+            return false
+        }
+
+        true
+    }
+
     fn evolve(&mut self) -> Chromosome {
         let mut generation:u32 = 0;
         let mut condition = true;
@@ -193,7 +212,7 @@ impl OOPGeneticAlgorithmStruct {
             self.evaluate();
             best = self.population.first_mut().unwrap().clone();
 
-            if generation >= 500 {
+            if self.check_is_end(best.fitness) {
                 condition = false;
             } else {
                 self.select();

@@ -17,6 +17,9 @@ struct Args {
     #[arg(short, long)]
     file_path: String,
 
+    #[arg(short, long, default_value_t = 10)]
+    no_upgrade_limit: u8,
+
     #[arg(short, long, default_value_t = 5)]
     mutation_factor: u8,
 
@@ -32,6 +35,7 @@ fn main() {
     let args = Args::parse();
     let problem = <Problem as ProblemParser>::parse_input(args.file_path);
     let configuration = ConfigurationByGenerations {
+        no_upgrade_limit: args.no_upgrade_limit,
         mutation_factor: args.mutation_factor,
         population_size: args.population_size,
         seed: args.seed,

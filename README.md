@@ -22,12 +22,12 @@ cargo run -- -h
 
 ## Arguments
 
-| **name**        | **arg**              | **Type** | **default** | **required** | **Description**                            |
-|-----------------|----------------------|----------|-------------|--------------|--------------------------------------------|
-| file-path       | -f --file-path       | string   |             | true         | Input file path                            |
-| seed            | -s --seed            | integer  | 1           | false        | Seed used for random initialization        | 
-| version         | -V --version         | NA       |             | false        | Program version                            |
-| help            | -h --help            | NA       |             | false        | Show help                                  |
-| population size | -p --population-size | integer  | 500         | false        | Dimension of generated population          |
-| mutation factor | -m --mutation-factor | integer  | 5           | false        | Factor of mutation ({v}/100)% -> 5 = 0.05% |
-| generations     | -g --generations     | integer  | 500         | false        | number of generations                      |
+| **name**         | **arg**                | **Type** | **default** | **required** | **Description**                               |
+|------------------|------------------------|----------|-------------|--------------|-----------------------------------------------|
+| file-path        | -f --file-path         | string   |             | true         | Input file path                               |
+| seed             | -s --seed              | integer  | 1           | false        | Seed used for random initialization           | 
+| version          | -V --version           | NA       |             | false        | Program version                               |
+| help             | -h --help              | NA       |             | false        | Show help                                     |
+| population size  | -p --population-size   | integer  | 500         | false        | Dimension of generated population             |
+| mutation factor  | -m --mutation-factor   | integer  | 5           | false        | Factor of mutation ({v}/100)% -> 5 = 0.05%    |
+| no upgrade limit | -n --no-upgrade-limit  | integer  | 10          | false        | Number of generations without fitness upgrade |
