@@ -23,6 +23,7 @@ pub fn make_item(gain: i64,
     Item {
         gain,
         cost,
+        rate: cost as f64 / gain as f64
     }
 }
 

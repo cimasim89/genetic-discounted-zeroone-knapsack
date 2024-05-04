@@ -17,7 +17,7 @@ struct Args {
     #[arg(short, long)]
     file_path: String,
 
-    #[arg(short, long, default_value_t = 10)]
+    #[arg(short, long, default_value_t = 100)]
     no_upgrade_limit: u8,
 
     #[arg(short, long, default_value_t = 5)]
@@ -41,8 +41,7 @@ fn main() {
         seed: args.seed,
     };
     let now = Instant::now();
-    let mut executor =  OOPGeneticAlgorithmStruct::new(problem, Box::new(configuration));
-    executor.init();
+    let mut executor = <OOPGeneticAlgorithmStruct as OOPGeneticAlgorithm>::init(problem, Box::new(configuration));
     let solution = executor.run();
     println!("Solution: {:?}", solution);
     let elapsed = now.elapsed();

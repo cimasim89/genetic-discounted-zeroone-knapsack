@@ -8,7 +8,7 @@ use crate::structure::configuration::Configuration;
 use crate::utils;
 
 pub trait OOPGeneticAlgorithm {
-    fn init(&mut self);
+    fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self;
     fn run(&mut self) -> Solution;
 }
 
@@ -23,21 +23,20 @@ pub struct OOPGeneticAlgorithmStruct {
 
 impl OOPGeneticAlgorithmStruct {
 
-    pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Box<dyn OOPGeneticAlgorithm> {
-        Box::new(OOPGeneticAlgorithmStruct {
+    pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
+        OOPGeneticAlgorithmStruct {
             best_fitness:0,
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
             rng:utils::make_rng(configuration.get_seed()),
             configuration,
             population: vec![],
             problem,
-        })
+        }
     }
 
 
-    fn initialize_population(&mut self) -> Vec<Chromosome> {
+    fn initialize_population(&mut self) {
         println!("Initializing population...");
-        let mut population = Vec::new();
 
         let mut generated = self.configuration.get_population_size();
 
@@ -53,11 +52,10 @@ impl OOPGeneticAlgorithmStruct {
                 continue
             }
             Chromosome::set_fitness(&chromosome,fitness);
-            population.push(chromosome);
+            self.population.push(chromosome);
             generated -= 1;
         }
 
-        population
     }
 
 
@@ -205,10 +203,15 @@ impl OOPGeneticAlgorithmStruct {
     fn evolve(&mut self) -> Chromosome {
         let mut generation:u32 = 0;
         let mut condition = true;
-        let mut best: Chromosome = self.population.first_mut().unwrap().clone();
+        let mut best: Chromosome = match self.population.first_mut(){
+            None => {panic!("Population has not been initialized")}
+            Some(c) => {
+                c.clone()
+            }
+        };
 
         while condition {
-            println!("Evolving population generation: {}", generation);
+            println!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
             self.evaluate();
             best = self.population.first_mut().unwrap().clone();
 
@@ -230,8 +233,10 @@ impl OOPGeneticAlgorithmStruct {
 
 impl OOPGeneticAlgorithm for OOPGeneticAlgorithmStruct {
 
-    fn init(&mut self) {
-        self.population = self.initialize_population()
+    fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
+        let mut executor = OOPGeneticAlgorithmStruct::new(problem,configuration);
+        executor.initialize_population();
+        executor
     }
 
     fn run(&mut self) -> Solution {

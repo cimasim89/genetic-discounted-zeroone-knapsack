@@ -35,22 +35,5 @@ impl Chromosome {
         }
     }
 
-    pub fn set_size(self: &Self, size: i32) -> Chromosome {
-        Chromosome {
-            genes: self.genes.clone(),
-            fitness: self.fitness,
-            size,
-            age: self.age,
-        }
-    }
-
-    pub fn set_age(self: &Self, age: i32) -> Self {
-        Chromosome {
-            genes: self.genes.clone(),
-            fitness: self.fitness,
-            size: self.size,
-            age,
-        }
-    }
 }
 
