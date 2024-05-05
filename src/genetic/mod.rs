@@ -1,10 +1,11 @@
 use rand::Rng;
 use rand::rngs::SmallRng;
+
 use crate::structure::chromosome::Chromosome;
+use crate::structure::configuration::Configuration;
 use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
-use crate::structure::configuration::Configuration;
 use crate::utils;
 
 pub trait OOPGeneticAlgorithm {
@@ -18,16 +19,15 @@ pub struct OOPGeneticAlgorithmStruct {
     configuration: Box<dyn Configuration>,
     population: Vec<Chromosome>,
     problem: Problem,
-    rng: SmallRng
+    rng: SmallRng,
 }
 
 impl OOPGeneticAlgorithmStruct {
-
     pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
         OOPGeneticAlgorithmStruct {
-            best_fitness:0,
+            best_fitness: 0,
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
-            rng:utils::make_rng(configuration.get_seed()),
+            rng: utils::make_rng(configuration.get_seed()),
             configuration,
             population: vec![],
             problem,
@@ -49,15 +49,13 @@ impl OOPGeneticAlgorithmStruct {
             let chromosome = Chromosome::init_chromosome(genes, self.problem.size);
             let fitness = self.fitness_func(&chromosome);
             if fitness == 0 {
-                continue
+                continue;
             }
-            Chromosome::set_fitness(&chromosome,fitness);
+            Chromosome::set_fitness(&chromosome, fitness);
             self.population.push(chromosome);
             generated -= 1;
         }
-
     }
-
 
 
     fn make_solution(&mut self, chromosome: &Chromosome) -> Solution {
@@ -73,11 +71,10 @@ impl OOPGeneticAlgorithmStruct {
         Solution::make_solution(data, chromosome.fitness, cost)
     }
 
-    fn fitness_func(&self,chromosome: &Chromosome) -> i64 {
+    fn fitness_func(&self, chromosome: &Chromosome) -> i64 {
         let mut fitness = 0;
         let mut cost = 0;
         for (i, gene) in chromosome.genes.iter().enumerate() {
-
             if *gene == 0 {
                 continue;
             }
@@ -185,26 +182,26 @@ impl OOPGeneticAlgorithmStruct {
         self.population = new_population
     }
 
-    fn check_is_end(&mut self,curr_fitness: i64) -> bool{
+    fn check_is_end(&mut self, curr_fitness: i64) -> bool {
         if curr_fitness > self.best_fitness {
             self.best_fitness = curr_fitness;
             self.remain_no_improved_generations = self.configuration.get_no_upgrade_limit();
-            return false
+            return false;
         }
 
         if self.remain_no_improved_generations > 0 {
             self.remain_no_improved_generations -= 1;
-            return false
+            return false;
         }
 
         true
     }
 
     fn evolve(&mut self) -> Chromosome {
-        let mut generation:u32 = 0;
+        let mut generation: u32 = 0;
         let mut condition = true;
-        let mut best: Chromosome = match self.population.first_mut(){
-            None => {panic!("Population has not been initialized")}
+        let mut best: Chromosome = match self.population.first_mut() {
+            None => { panic!("Population has not been initialized") }
             Some(c) => {
                 c.clone()
             }
@@ -226,15 +223,13 @@ impl OOPGeneticAlgorithmStruct {
         }
 
         best
-
     }
 }
 
 
 impl OOPGeneticAlgorithm for OOPGeneticAlgorithmStruct {
-
     fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
-        let mut executor = OOPGeneticAlgorithmStruct::new(problem,configuration);
+        let mut executor = OOPGeneticAlgorithmStruct::new(problem, configuration);
         executor.initialize_population();
         executor
     }
@@ -246,7 +241,6 @@ impl OOPGeneticAlgorithm for OOPGeneticAlgorithmStruct {
         let best = self.evolve();
         self.make_solution(&best)
     }
-
 }
 
 

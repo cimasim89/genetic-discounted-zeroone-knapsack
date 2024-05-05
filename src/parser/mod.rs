@@ -1,12 +1,12 @@
-mod utils;
-
-use std::io::Result;
 use std::fs::File;
 use std::io::{self};
-use crate::structure::problem::Problem;
-use crate::structure::item::Item;
-use crate::structure::{make_problem, make_item};
+use std::io::Result;
 
+use crate::structure::{make_item, make_problem};
+use crate::structure::item::Item;
+use crate::structure::problem::Problem;
+
+mod utils;
 
 pub trait ProblemParser {
     fn parse_input(file_name: String) -> Self;

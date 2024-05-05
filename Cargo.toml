@@ -3,8 +3,6 @@ name = "discounted-zeroone-knapsack"
 version = "0.1.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 clap = { version = "4.5.2", features = ["derive"] }
 rand = { version = "0.8.5", features = ["small_rng"] }

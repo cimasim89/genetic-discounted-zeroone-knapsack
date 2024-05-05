@@ -7,6 +7,7 @@ pub struct Solution {
     pub(crate) fitness: i64,
 }
 
+
 impl Solution {
     pub fn make_solution(data: Vec<Item>, fitness: i64, cost: i64) -> Solution {
         Solution {

@@ -1,15 +1,16 @@
-mod parser;
-mod structure;
-mod utils;
-mod genetic;
+use std::time::Instant;
 
 use clap::Parser;
+
 use crate::genetic::{OOPGeneticAlgorithm, OOPGeneticAlgorithmStruct};
 use crate::parser::*;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
-use std::time::Instant;
 
+mod parser;
+mod structure;
+mod utils;
+mod genetic;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
