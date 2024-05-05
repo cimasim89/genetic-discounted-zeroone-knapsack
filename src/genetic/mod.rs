@@ -34,6 +34,58 @@ impl OOPGeneticAlgorithmStruct {
         }
     }
 
+    fn get_chromosome_summary(&self, chromosome: &Chromosome) -> (i64, i64) {
+        let mut gain = 0;
+        let mut cost = 0;
+        for (i, gene) in chromosome.genes.iter().enumerate() {
+            if *gene == 0 {
+                continue;
+            }
+
+            gain += self.problem.data[i][*gene - 1].gain;
+            cost += self.problem.data[i][*gene - 1].cost;
+        }
+        (gain, cost)
+    }
+
+    fn find_max_rate(&self, chromosome: &Chromosome) -> (usize, usize) {
+        let mut max_rate = 0.0;
+        let mut max_value: usize = 1;
+        let mut max_gene: usize = 0;
+        for (gene, value) in chromosome.genes.iter().enumerate() {
+            if *value == 0 {
+                continue;
+            }
+
+            let curr_rate = self.problem.data[gene][*value - 1].rate;
+
+            if curr_rate > max_rate {
+                max_rate = curr_rate;
+                max_gene = gene;
+                max_value = *value
+            }
+        }
+        (max_gene, max_value)
+    }
+
+
+    fn fix_chromosome(&self, chromosome: &Chromosome, capacity: u32) -> Chromosome {
+        let mut c = chromosome.clone();
+        let mut genes = chromosome.genes.clone();
+        let mut cost = self.get_chromosome_summary(&chromosome).1;
+
+        while cost > capacity as i64 {
+            let (high_rate_gene, value) = self.find_max_rate(&c);
+            cost -= self.problem.data[high_rate_gene][value - 1].cost;
+            if value > 1 {
+                cost += self.problem.data[high_rate_gene][value - 2].cost;
+            }
+            genes[high_rate_gene] = value - 1;
+            c = Chromosome::init_chromosome(genes.clone(), self.problem.size)
+        }
+        c
+    }
+
 
     fn initialize_population(&mut self) {
         println!("Initializing population...");
@@ -46,10 +98,11 @@ impl OOPGeneticAlgorithmStruct {
                 // actually 0 is no selection
                 genes.push(self.rng.gen_range(0..4));
             }
-            let chromosome = Chromosome::init_chromosome(genes, self.problem.size);
-            let fitness = self.fitness_func(&chromosome);
+            let mut chromosome = Chromosome::init_chromosome(genes, self.problem.size);
+            let mut fitness = self.fitness_func(&chromosome);
             if fitness == 0 {
-                continue;
+                chromosome = self.fix_chromosome(&chromosome, self.problem.capacity);
+                fitness = self.fitness_func(&chromosome);
             }
             Chromosome::set_fitness(&chromosome, fitness);
             self.population.push(chromosome);
@@ -61,31 +114,22 @@ impl OOPGeneticAlgorithmStruct {
     fn make_solution(&mut self, chromosome: &Chromosome) -> Solution {
         let mut data: Vec<Item> = Vec::new();
         let mut cost = 0;
-        for (i, gene) in chromosome.genes.iter().enumerate() {
-            if *gene == 0 {
+        for (gene, value) in chromosome.genes.iter().enumerate() {
+            if *value == 0 {
                 continue;
             }
-            data.push(self.problem.data[i][*gene - 1].clone());
-            cost += self.problem.data[i][*gene - 1].cost;
+            data.push(self.problem.data[gene][*value - 1].clone());
+            cost += self.problem.data[gene][*value - 1].cost;
         }
         Solution::make_solution(data, chromosome.fitness, cost)
     }
 
     fn fitness_func(&self, chromosome: &Chromosome) -> i64 {
-        let mut fitness = 0;
-        let mut cost = 0;
-        for (i, gene) in chromosome.genes.iter().enumerate() {
-            if *gene == 0 {
-                continue;
-            }
-
-            fitness += self.problem.data[i][*gene - 1].gain;
-            cost += self.problem.data[i][*gene - 1].cost;
-        }
+        let (gain, cost) = self.get_chromosome_summary(&chromosome);
         if cost > self.problem.capacity as i64 {
-            fitness = 0;
+            return 0;
         }
-        fitness
+        gain
     }
 
     fn evaluate(&mut self) {

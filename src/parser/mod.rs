@@ -54,7 +54,7 @@ fn make_data(gains: Vec<String>, costs: Vec<String>) -> Vec<Vec<Item>> {
     data
 }
 
-fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, i32), io::Lines<io::BufReader<File>>) {
+fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, u32), io::Lines<io::BufReader<File>>) {
     let size_line = lines.next();
 
     let s = match size_line {
@@ -75,7 +75,7 @@ fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, i32), io::
             Ok(l) => l
         }
     };
-    let capacity = c.parse::<i32>().unwrap();
+    let capacity = c.parse::<u32>().unwrap();
 
     ((size, capacity), lines)
 }
