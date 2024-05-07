@@ -25,13 +25,8 @@ impl Chromosome {
         }
     }
 
-    pub fn set_fitness(self: &Self, fitness: i64) -> Chromosome {
-        Chromosome {
-            genes: self.genes.clone(),
-            fitness,
-            size: self.size,
-            age: self.age,
-        }
+    pub fn set_fitness(self: &mut Self, fitness: i64) {
+        self.fitness = fitness;
     }
 }
 

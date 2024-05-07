@@ -69,7 +69,7 @@ impl OOPGeneticAlgorithmStruct {
     }
 
 
-    fn fix_chromosome(&self, chromosome: &Chromosome, capacity: u32) -> Chromosome {
+    fn repair_chromosome(&self, chromosome: &Chromosome, capacity: u32) -> Chromosome {
         let mut c = chromosome.clone();
         let mut genes = chromosome.genes.clone();
         let mut cost = self.get_chromosome_summary(&chromosome).1;
@@ -99,12 +99,7 @@ impl OOPGeneticAlgorithmStruct {
                 genes.push(self.rng.gen_range(0..4));
             }
             let mut chromosome = Chromosome::init_chromosome(genes, self.problem.size);
-            let mut fitness = self.fitness_func(&chromosome);
-            if fitness == 0 {
-                chromosome = self.fix_chromosome(&chromosome, self.problem.capacity);
-                fitness = self.fitness_func(&chromosome);
-            }
-            Chromosome::set_fitness(&chromosome, fitness);
+            chromosome = self.repair_chromosome(&chromosome, self.problem.capacity);
             self.population.push(chromosome);
             generated -= 1;
         }
@@ -182,8 +177,10 @@ impl OOPGeneticAlgorithmStruct {
             }
         }
 
-        let child1 = Chromosome::init_chromosome(child1_genes, self.problem.size);
-        let child2 = Chromosome::init_chromosome(child2_genes, self.problem.size);
+        let mut child1 = Chromosome::init_chromosome(child1_genes, self.problem.size);
+        child1 = self.repair_chromosome(&child1, self.problem.capacity);
+        let mut child2 = Chromosome::init_chromosome(child2_genes, self.problem.size);
+        child2 = self.repair_chromosome(&child2, self.problem.capacity);
 
         (child1, child2)
     }
