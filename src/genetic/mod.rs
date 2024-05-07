@@ -241,8 +241,8 @@ impl OOPGeneticAlgorithmStruct {
     fn evolve(&mut self) -> Chromosome {
         let mut generation: u32 = 0;
         let mut condition = true;
-        let mut best: Chromosome = match self.population.first_mut() {
-            None => { panic!("Population has not been initialized") }
+        let mut best: Chromosome = match self.population.first() {
+            None => { panic!("Population has not been initialized!") }
             Some(c) => {
                 c.clone()
             }
@@ -251,7 +251,12 @@ impl OOPGeneticAlgorithmStruct {
         while condition {
             println!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
             self.evaluate();
-            best = self.population.first().unwrap().clone();
+            best = match self.population.first() {
+                None => { panic!("Problem occurs during evolution!") }
+                Some(c) => {
+                    c.clone()
+                }
+            };
 
             if self.check_is_end(best.fitness) {
                 condition = false;
