@@ -81,7 +81,7 @@ impl OOPGeneticAlgorithmStruct {
                 cost += self.problem.data[high_rate_gene][value - 2].cost;
             }
             genes[high_rate_gene] = value - 1;
-            c = Chromosome::init_chromosome(genes.clone(), self.problem.size)
+            c = Chromosome::init_chromosome(genes.clone())
         }
         c
     }
@@ -98,7 +98,7 @@ impl OOPGeneticAlgorithmStruct {
                 // actually 0 is no selection
                 genes.push(self.rng.gen_range(0..4));
             }
-            let mut chromosome = Chromosome::init_chromosome(genes, self.problem.size);
+            let mut chromosome = Chromosome::init_chromosome(genes);
             chromosome = self.repair_chromosome(&chromosome, self.problem.capacity);
             self.population.push(chromosome);
             generated -= 1;
@@ -182,9 +182,9 @@ impl OOPGeneticAlgorithmStruct {
             }
         }
 
-        let mut child1 = Chromosome::init_chromosome(child1_genes, self.problem.size);
+        let mut child1 = Chromosome::init_chromosome(child1_genes);
         child1 = self.repair_chromosome(&child1, self.problem.capacity);
-        let mut child2 = Chromosome::init_chromosome(child2_genes, self.problem.size);
+        let mut child2 = Chromosome::init_chromosome(child2_genes);
         child2 = self.repair_chromosome(&child2, self.problem.capacity);
 
         (child1, child2)

@@ -2,16 +2,14 @@
 pub struct Chromosome {
     pub(crate) genes: Vec<usize>,
     pub(crate) fitness: i64,
-    pub(crate) size: i32,
     pub(crate) age: i32,
 }
 
 impl Chromosome {
-    pub fn init_chromosome(genes: Vec<usize>, size: i32) -> Self {
+    pub fn init_chromosome(genes: Vec<usize>) -> Self {
         Chromosome {
             genes,
             fitness: 0,
-            size,
             age: 0,
         }
     }
