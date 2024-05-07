@@ -130,11 +130,16 @@ impl OOPGeneticAlgorithmStruct {
     fn evaluate(&mut self) {
         println!("evaluating population...");
 
-        let mut evaluated = self.population.iter()
-            .map(|c| Chromosome::evaluate_chromosome(c, self.fitness_func(c), c.age + 1))
-            .collect::<Vec<_>>();
-        evaluated.sort_by(|a, b| b.fitness.cmp(&a.fitness));
-        self.population = evaluated
+        let fitness: Vec<_> = self.population.iter().map(|c| {
+            self.fitness_func(c)
+        }).collect();
+
+        for (i, chromosome) in self.population.iter_mut().enumerate() {
+            chromosome.set_fitness(fitness[i]);
+            chromosome.increase_age();
+        }
+
+        self.population.sort_by(|a, b| b.fitness.cmp(&a.fitness));
     }
 
     fn roulette_wheel_selection(&mut self) {

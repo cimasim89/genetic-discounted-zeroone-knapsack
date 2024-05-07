@@ -28,5 +28,9 @@ impl Chromosome {
     pub fn set_fitness(self: &mut Self, fitness: i64) {
         self.fitness = fitness;
     }
+
+    pub fn increase_age(self: &mut Self) {
+        self.age = self.age + 1;
+    }
 }
 
