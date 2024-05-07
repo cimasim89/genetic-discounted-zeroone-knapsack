@@ -22,7 +22,7 @@ struct Args {
     no_upgrade_limit: u8,
 
     #[arg(short, long, default_value_t = 5)]
-    mutation_factor: u8,
+    mutation_factor: u16,
 
     #[arg(short, long, default_value_t = 500)]
     population_size: u32,

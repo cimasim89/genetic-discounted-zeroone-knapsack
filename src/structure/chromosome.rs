@@ -16,15 +16,6 @@ impl Chromosome {
         }
     }
 
-    pub fn evaluate_chromosome(self: &Self, fitness: i64, age: i32) -> Chromosome {
-        Chromosome {
-            genes: self.genes.clone(),
-            fitness,
-            size: self.size,
-            age,
-        }
-    }
-
     pub fn set_fitness(self: &mut Self, fitness: i64) {
         self.fitness = fitness;
     }

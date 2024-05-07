@@ -212,7 +212,7 @@ impl OOPGeneticAlgorithmStruct {
         println!("Mutating population...");
 
         self.population.iter_mut().for_each(|c| {
-            if self.rng.gen_range(0..1000) > 5 {
+            if self.rng.gen_range(0..1000) > self.configuration.get_mutation_factor() {
                 return;
             }
             let index = self.rng.gen_range(0..c.genes.len());
@@ -251,7 +251,7 @@ impl OOPGeneticAlgorithmStruct {
         while condition {
             println!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
             self.evaluate();
-            best = self.population.first_mut().unwrap().clone();
+            best = self.population.first().unwrap().clone();
 
             if self.check_is_end(best.fitness) {
                 condition = false;
