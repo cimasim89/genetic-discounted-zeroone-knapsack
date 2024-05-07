@@ -211,21 +211,16 @@ impl OOPGeneticAlgorithmStruct {
     fn mutate(&mut self) {
         println!("Mutating population...");
 
-        let mut new_population = Vec::new();
-
-        self.population.iter().for_each(|c| {
+        self.population.iter_mut().for_each(|c| {
             if self.rng.gen_range(0..1000) > 5 {
-                new_population.push(c.clone());
                 return;
             }
-            let mut genes = c.genes.clone();
-            let index = self.rng.gen_range(0..genes.len());
+            let index = self.rng.gen_range(0..c.genes.len());
             let gene = self.rng.gen_range(0..4);
-            genes[index] = gene;
-            new_population.push(Chromosome::init_chromosome(genes, self.problem.size));
+            c.genes[index] = gene;
+            c.fitness = 0;
+            c.age = 0;
         });
-
-        self.population = new_population
     }
 
     fn check_is_end(&mut self, curr_fitness: i64) -> bool {
