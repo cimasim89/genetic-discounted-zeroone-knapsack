@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use clap::Parser;
 
-use crate::genetic::{OOPGeneticAlgorithm, OOPGeneticAlgorithmStruct};
+use crate::genetic::{GeneticAlgorithm, KnapsackGeneticAlgorithm};
 use crate::parser::*;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
@@ -42,7 +42,7 @@ fn main() {
         seed: args.seed,
     };
     let now = Instant::now();
-    let mut executor = <OOPGeneticAlgorithmStruct as OOPGeneticAlgorithm>::init(problem, Box::new(configuration));
+    let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(problem, Box::new(configuration));
     let solution = executor.run();
     println!("Solution: {:?}", solution);
     let elapsed = now.elapsed();

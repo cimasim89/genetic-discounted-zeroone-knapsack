@@ -8,12 +8,12 @@ use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
 use crate::utils;
 
-pub trait OOPGeneticAlgorithm {
+pub trait GeneticAlgorithm {
     fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self;
     fn run(&mut self) -> Solution;
 }
 
-pub struct OOPGeneticAlgorithmStruct {
+pub struct KnapsackGeneticAlgorithm {
     best_fitness: i64,
     remain_no_improved_generations: u8,
     configuration: Box<dyn Configuration>,
@@ -22,9 +22,9 @@ pub struct OOPGeneticAlgorithmStruct {
     rng: SmallRng,
 }
 
-impl OOPGeneticAlgorithmStruct {
+impl KnapsackGeneticAlgorithm {
     pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
-        OOPGeneticAlgorithmStruct {
+        KnapsackGeneticAlgorithm {
             best_fitness: 0,
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
             rng: utils::make_rng(configuration.get_seed()),
@@ -273,9 +273,9 @@ impl OOPGeneticAlgorithmStruct {
 }
 
 
-impl OOPGeneticAlgorithm for OOPGeneticAlgorithmStruct {
+impl GeneticAlgorithm for KnapsackGeneticAlgorithm {
     fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
-        let mut executor = OOPGeneticAlgorithmStruct::new(problem, configuration);
+        let mut executor = KnapsackGeneticAlgorithm::new(problem, configuration);
         executor.initialize_population();
         executor
     }
