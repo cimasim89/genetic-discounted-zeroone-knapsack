@@ -1,12 +1,12 @@
-mod utils;
-
-use std::io::Result;
 use std::fs::File;
 use std::io::{self};
-use crate::structure::problem::Problem;
-use crate::structure::item::Item;
-use crate::structure::{make_problem, make_item};
+use std::io::Result;
 
+use crate::structure::{make_item, make_problem};
+use crate::structure::item::Item;
+use crate::structure::problem::Problem;
+
+mod utils;
 
 pub trait ProblemParser {
     fn parse_input(file_name: String) -> Self;
@@ -54,7 +54,7 @@ fn make_data(gains: Vec<String>, costs: Vec<String>) -> Vec<Vec<Item>> {
     data
 }
 
-fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, i32), io::Lines<io::BufReader<File>>) {
+fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, u32), io::Lines<io::BufReader<File>>) {
     let size_line = lines.next();
 
     let s = match size_line {
@@ -75,7 +75,7 @@ fn parse_headers(mut lines: io::Lines<io::BufReader<File>>) -> ((i32, i32), io::
             Ok(l) => l
         }
     };
-    let capacity = c.parse::<i32>().unwrap();
+    let capacity = c.parse::<u32>().unwrap();
 
     ((size, capacity), lines)
 }

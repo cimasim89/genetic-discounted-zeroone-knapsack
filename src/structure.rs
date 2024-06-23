@@ -8,7 +8,7 @@ pub(crate) mod chromosome;
 pub(crate) mod configuration;
 
 
-pub fn make_problem(capacity: i32,
+pub fn make_problem(capacity: u32,
                     data: Vec<Vec<Item>>,
                     size: i32, ) -> Problem {
     Problem {
@@ -23,6 +23,7 @@ pub fn make_item(gain: i64,
     Item {
         gain,
         cost,
+        rate: cost as f64 / gain as f64,
     }
 }
 
