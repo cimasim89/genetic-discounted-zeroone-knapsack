@@ -7,6 +7,8 @@ use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
 use crate::utils;
+use log::{debug, info};
+
 
 pub trait GeneticAlgorithm {
     fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self;
@@ -90,7 +92,7 @@ impl KnapsackGeneticAlgorithm {
 
 
     fn initialize_population(&mut self) {
-        println!("Initializing population...");
+        debug!("Initializing population...");
 
         let mut generated = self.configuration.get_population_size();
 
@@ -130,7 +132,7 @@ impl KnapsackGeneticAlgorithm {
     }
 
     fn evaluate(&mut self) {
-        println!("evaluating population...");
+        debug!("evaluating population...");
 
         let fitness: Vec<_> = self.population.iter().map(|c| {
             self.fitness_func(c)
@@ -164,7 +166,7 @@ impl KnapsackGeneticAlgorithm {
     }
 
     fn select(&mut self) {
-        println!("Selecting population...");
+        debug!("Selecting population...");
         self.roulette_wheel_selection()
     }
 
@@ -193,7 +195,7 @@ impl KnapsackGeneticAlgorithm {
     }
 
     fn crossover(&mut self) {
-        println!("Crossover population...");
+        debug!("Crossover population...");
 
         let mut new_population = Vec::new();
 
@@ -211,7 +213,7 @@ impl KnapsackGeneticAlgorithm {
     }
 
     fn mutate(&mut self) {
-        println!("Mutating population...");
+        debug!("Mutating population...");
 
         self.population.iter_mut().for_each(|c| {
             if self.rng.gen_range(0..1000) > self.mutation_factor {
@@ -251,7 +253,7 @@ impl KnapsackGeneticAlgorithm {
         };
 
         while condition {
-            println!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
+            info!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
             self.evaluate();
             best = match self.population.first() {
                 None => { panic!("Problem occurs during evolution!") }
@@ -270,7 +272,7 @@ impl KnapsackGeneticAlgorithm {
             }
         }
 
-        if (generation % 10 == 0 && self.mutation_factor > 1) {
+        if generation % 10 == 0 && self.mutation_factor > 1 {
             self.mutation_factor -= 1;
         }
 
@@ -287,7 +289,7 @@ impl GeneticAlgorithm for KnapsackGeneticAlgorithm {
     }
 
     fn run(&mut self) -> Solution {
-        println!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ",
+        info!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ",
                  self.problem.capacity,
                  self.problem.size);
         let (best, generations) = self.evolve();

@@ -1,11 +1,10 @@
 use crate::structure::solution::Solution;
 use csv::Writer;
 use std::env;
-use std::fmt::Display;
 use std::fs::OpenOptions;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-struct Metric {
+pub(crate) struct Metric {
     architecture: String,
     best_fitness: i64,
     elapsed: Duration,
@@ -19,7 +18,7 @@ struct Metric {
     starting_time: SystemTime,
 }
 
-trait Exporter {
+pub(crate) trait Exporter {
     fn export(&self, row: Metric);
 }
 
@@ -36,7 +35,7 @@ impl CSV {
             row.seed.to_string(),
             row.no_upgrade_limit.to_string(),
             row.population_size.to_string(),
-            format!("{}", row.elapsed.as_secs()),
+            format!("{}", row.elapsed.as_nanos()),
             row.generation.to_string(),
             row.best_fitness.to_string(),
             row.os_description,
@@ -48,7 +47,7 @@ impl CSV {
 
 impl Exporter for CSV {
     fn export(&self, row: Metric) {
-        let mut file = OpenOptions::new()
+        let file = OpenOptions::new()
             .write(true)
             .create(true)
             .append(true)
