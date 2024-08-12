@@ -1,5 +1,5 @@
-use rand::Rng;
 use rand::rngs::SmallRng;
+use rand::Rng;
 
 use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::Configuration;
@@ -20,6 +20,7 @@ pub struct KnapsackGeneticAlgorithm {
     population: Vec<Chromosome>,
     problem: Problem,
     rng: SmallRng,
+    mutation_factor: u16,
 }
 
 impl KnapsackGeneticAlgorithm {
@@ -31,6 +32,7 @@ impl KnapsackGeneticAlgorithm {
             configuration,
             population: vec![],
             problem,
+            mutation_factor: 10,
         }
     }
 
@@ -106,7 +108,7 @@ impl KnapsackGeneticAlgorithm {
     }
 
 
-    fn make_solution(&mut self, chromosome: &Chromosome) -> Solution {
+    fn make_solution(&mut self, chromosome: &Chromosome, generations: u32) -> Solution {
         let mut data: Vec<Item> = Vec::new();
         let mut cost = 0;
         for (gene, value) in chromosome.genes.iter().enumerate() {
@@ -116,7 +118,7 @@ impl KnapsackGeneticAlgorithm {
             data.push(self.problem.data[gene][*value - 1].clone());
             cost += self.problem.data[gene][*value - 1].cost;
         }
-        Solution::make_solution(data, chromosome.fitness, cost)
+        Solution::make_solution(data, chromosome.fitness, cost, generations)
     }
 
     fn fitness_func(&self, chromosome: &Chromosome) -> i64 {
@@ -212,7 +214,7 @@ impl KnapsackGeneticAlgorithm {
         println!("Mutating population...");
 
         self.population.iter_mut().for_each(|c| {
-            if self.rng.gen_range(0..1000) > self.configuration.get_mutation_factor() {
+            if self.rng.gen_range(0..1000) > self.mutation_factor {
                 return;
             }
             let index = self.rng.gen_range(0..c.genes.len());
@@ -238,7 +240,7 @@ impl KnapsackGeneticAlgorithm {
         true
     }
 
-    fn evolve(&mut self) -> Chromosome {
+    fn evolve(&mut self) -> (Chromosome, u32) {
         let mut generation: u32 = 0;
         let mut condition = true;
         let mut best: Chromosome = match self.population.first() {
@@ -268,7 +270,11 @@ impl KnapsackGeneticAlgorithm {
             }
         }
 
-        best
+        if (generation % 10 == 0 && self.mutation_factor > 1) {
+            self.mutation_factor -= 1;
+        }
+
+        (best, generation)
     }
 }
 
@@ -284,8 +290,8 @@ impl GeneticAlgorithm for KnapsackGeneticAlgorithm {
         println!("Running genetic algorithm for knapsack capacity: {}, selection size: {} ",
                  self.problem.capacity,
                  self.problem.size);
-        let best = self.evolve();
-        self.make_solution(&best)
+        let (best, generations) = self.evolve();
+        self.make_solution(&best, generations)
     }
 }
 
