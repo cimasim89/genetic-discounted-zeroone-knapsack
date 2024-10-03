@@ -270,6 +270,8 @@ mod tests {
         let data = vec![
             vec![make_item(10, 5), make_item(20, 10), make_item(30, 14)],
             vec![make_item(15, 7), make_item(25, 12), make_item(45, 15)],
+            vec![make_item(20, 1), make_item(35, 35), make_item(55, 35)],
+            vec![make_item(11, 3), make_item(22, 15), make_item(33, 16)],
         ];
         let size = data.len() as i32;
 
@@ -294,67 +296,4 @@ mod tests {
         let ((x_up, v_up), (x, v_low)) = generator.lp_relaxation();
     }
 }
-
-
-
-/*
-fn lp_relaxation(&self) {
-    let data = self.problem.data.clone();
-    let size = data.len();
-    let mut f_0: Vec<(usize, usize)> = vec![];
-    let c_vec: Vec<[i64; 3]> = vec![[0; 3]; size];
-    let a_vec: Vec<[i64; 3]> = vec![[0; 3]; size];
-    let e_vec: Vec<[i64; 3]> = vec![[0; 3]; size];
-
-    // step 1
-    for index in (0..data.len()) {
-        let current_set = data[index].clone();
-        let mut c: [i64; 3] = [0; 3];
-        let mut a: [i64; 3] = [0; 3];
-        let mut e: [i64; 3] = [0; 3];
-        /* Check if item (i, 1) is LP-dominated */
-        if self.is_first_lp_dominated(current_set.clone()) {
-            // implement row 4
-            e[0] = i64::MIN;
-            f_0.push((index, 1))
-        } else {
-            // implement row 5
-            c[0] = current_set[1].gain;
-            a[0] = current_set[1].cost;
-            e[0] = c[0] / a[0];
-        }
-
-        /* Check if item (i, 2) is LP-dominated */
-        if self.is_second_lp_dominated(current_set.clone()) {
-            // implement row 7
-            e[1] = i64::MIN;
-            f_0.push((index, 2));
-
-            // implement row 8
-            c[2] = current_set[3].gain - current_set[1].gain;
-            a[2] = current_set[3].cost - current_set[1].cost;
-            e[2] = c[2] / a[2];
-        } else {
-            // implement row 9
-            c[1] = current_set[2].gain - c[0];
-            a[1] = current_set[2].cost - a[0];
-            e[1] = c[1] / a[1];
-
-            // implement row 10
-            c[2] = current_set[3].gain - c[1];
-            a[2] = current_set[3].cost - a[1];
-            e[2] = c[2] / a[2];
-        }
-        // assign values to result vectors
-        c_vec[index] = c;
-        a_vec[index] = a;
-        e_vec[index] = e;
-    }
-
-    let mut combined: Vec<([i64; 3], [i64; 3], [i64; 3])> = c_vec.into_iter().zip(a_vec).zip(e_vec).map(|((c, a), e)| (c, a, e)).collect();
-    combined.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
-}
-
-
- */
 
