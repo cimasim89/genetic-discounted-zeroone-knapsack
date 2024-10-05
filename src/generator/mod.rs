@@ -3,6 +3,9 @@ use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use rand::prelude::SmallRng;
 use rand::Rng;
+use rayon::prelude::*;
+use std::sync::Mutex;
+
 
 #[derive(Clone)]
 struct ItemP {
@@ -19,7 +22,7 @@ struct LPRelaxationResult {
     x: Vec<[f64; 3]>,
     v_up: i64,
     v_low: i64,
-    relaxed: Vec<ItemP>,
+    relaxed: Vec<[ItemP; 3]>,
 }
 
 impl ItemP {
@@ -80,10 +83,11 @@ impl EnhancedChromosomeGenerator {
         }
     }
 
-    fn is_dominant(dominant: &Item, to_check: &Item, ratio: f64) -> bool {
+    fn is_dominant(dominant: &Item, to_check: &Item) -> bool {
+        let to_check_ratio = to_check.cost as f64 / to_check.gain as f64;
         let gain_difference = dominant.gain as f64 - to_check.gain as f64;
         let cost_difference = dominant.cost as f64 - to_check.cost as f64;
-        (gain_difference / cost_difference) >= ratio
+        (gain_difference / cost_difference) >= to_check_ratio
     }
 
     fn is_ranged_dominated(up: &Item, down: &Item, to_check: &Item) -> bool {
@@ -102,12 +106,10 @@ impl EnhancedChromosomeGenerator {
         let second = &vec[1];
         let third = &vec[2];
 
-        let first_ratio = first.cost as f64 / first.gain as f64;
-
         // equation 13
-        let is_second_dominated = EnhancedChromosomeGenerator::is_dominant(second, first, first_ratio);
+        let is_second_dominated = EnhancedChromosomeGenerator::is_dominant(second, first);
         // equation 14
-        let is_third_dominated = EnhancedChromosomeGenerator::is_dominant(third, first, first_ratio);
+        let is_third_dominated = EnhancedChromosomeGenerator::is_dominant(third, first);
 
         is_second_dominated || is_third_dominated
     }
@@ -118,25 +120,18 @@ impl EnhancedChromosomeGenerator {
         let second = &vec[1];
         let third = &vec[2];
 
-        let second_ratio = second.cost as f64 / second.gain as f64;
-
         let is_first_dominated = EnhancedChromosomeGenerator::is_ranged_dominated(third, first, second);
 
-        let is_third_dominated = EnhancedChromosomeGenerator::is_dominant(third, second, second_ratio);
+        let is_third_dominated = EnhancedChromosomeGenerator::is_dominant(third, second);
 
         is_third_dominated || is_first_dominated
     }
 
-
     fn lp_relaxation_eliminate_by_dominance(&self) -> (Vec<(usize, usize)>, Vec<[ItemP; 3]>) {
         let data = self.problem.data.clone();
-        let mut f_0: Vec<(usize, usize)> = vec![];
-        let mut relaxed_response: Vec<[ItemP; 3]> = vec![];
+        let f_0 = Mutex::new(vec![]);
 
-
-        // step 1
-        for index in 0..data.len() {
-            let current_set = data[index].clone();
+        let relaxed_response: Vec<[ItemP; 3]> = data.par_iter().enumerate().map(|(index, current_set)| {
             let mut itemp: [ItemP; 3] = [
                 ItemP::new(0, 0, 0.0, index, 0),
                 ItemP::new(0, 0, 0.0, index, 1),
@@ -146,7 +141,7 @@ impl EnhancedChromosomeGenerator {
             // Check if item (i, 1) is LP-dominated
             if self.is_first_lp_dominated(current_set.clone()) {
                 itemp[0].e = f64::MIN;
-                f_0.push((index, 0));
+                f_0.lock().unwrap().push((index, 0));
             } else {
                 itemp[0].c = current_set[0].gain;
                 itemp[0].a = current_set[0].cost;
@@ -156,7 +151,7 @@ impl EnhancedChromosomeGenerator {
             // Check if item (i, 2) is LP-dominated
             if self.is_second_lp_dominated(current_set.clone()) {
                 itemp[1].e = f64::MIN;
-                f_0.push((index, 1));
+                f_0.lock().unwrap().push((index, 1));
                 itemp[2].c = current_set[2].gain - itemp[0].c;
                 itemp[2].a = current_set[2].cost - itemp[0].a;
                 itemp[2].e = itemp[2].c as f64 / itemp[2].a as f64;
@@ -169,11 +164,10 @@ impl EnhancedChromosomeGenerator {
                 itemp[2].e = itemp[2].c as f64 / itemp[2].a as f64;
             }
 
+            itemp
+        }).collect();
 
-            relaxed_response.push(itemp);
-        }
-
-        (f_0, relaxed_response)
+        (f_0.into_inner().unwrap(), relaxed_response)
     }
 
     fn kp_greedy(&self, relaxed_original: Vec<[ItemP; 3]>, f_0: Vec<(usize, usize)>) -> LPRelaxationResult {
@@ -186,7 +180,7 @@ impl EnhancedChromosomeGenerator {
         let mut v_low = 0;
 
         // order by e
-        let mut relaxed: Vec<ItemP> = relaxed_original.into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
+        let mut relaxed: Vec<ItemP> = relaxed_original.clone().into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
         relaxed.sort_by(|a, b| b.e.partial_cmp(&a.e).unwrap());
 
         while remaining_capacity > 0 && j < relaxed.len() {
@@ -226,7 +220,7 @@ impl EnhancedChromosomeGenerator {
             x_up,
             v_up,
             v_low,
-            relaxed,
+            relaxed: relaxed_original,
         }
     }
 
@@ -247,14 +241,7 @@ impl EnhancedChromosomeGenerator {
 
                     // equation 13
                     let is_second_dominated = EnhancedChromosomeGenerator::is_dominant(second, first, first_ratio);
-                    if is_second_dominated {
-                        for item in &mut relaxed {
-                            if item.set_index == index && item.inner_index == 0 {
-                                item.c = 0;
-                                item.a = 0;
-                            }
-                        }
-                    } else {}
+                    if is_second_dominated {} else {}
                 } else {}
             }
         }
