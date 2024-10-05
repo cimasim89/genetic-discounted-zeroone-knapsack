@@ -13,6 +13,15 @@ struct ItemP {
     inner_index: usize, // Add inner index field
 }
 
+struct LPRelaxationResult {
+    f_0: Vec<(usize, usize)>,
+    x_up: Vec<[f64; 3]>,
+    x: Vec<[f64; 3]>,
+    v_up: i64,
+    v_low: i64,
+    relaxed: Vec<ItemP>,
+}
+
 impl ItemP {
     fn new(a: i64, c: i64, e: f64, set_index: usize, inner_index: usize) -> Self {
         ItemP { a, c, e, set_index, inner_index }
@@ -119,10 +128,11 @@ impl EnhancedChromosomeGenerator {
     }
 
 
-    fn lp_relaxation_sort_by_dominance(&self) -> (Vec<(usize, usize)>, Vec<ItemP>) {
+    fn lp_relaxation_eliminate_by_dominance(&self) -> (Vec<(usize, usize)>, Vec<[ItemP; 3]>) {
         let data = self.problem.data.clone();
         let mut f_0: Vec<(usize, usize)> = vec![];
-        let mut relaxed_vec: Vec<ItemP> = vec![];
+        let mut relaxed_response: Vec<[ItemP; 3]> = vec![];
+
 
         // step 1
         for index in 0..data.len() {
@@ -159,14 +169,14 @@ impl EnhancedChromosomeGenerator {
                 itemp[2].e = itemp[2].c as f64 / itemp[2].a as f64;
             }
 
-            relaxed_vec.extend_from_slice(&itemp);
+
+            relaxed_response.push(itemp);
         }
 
-        relaxed_vec.sort_by(|a, b| b.e.partial_cmp(&a.e).unwrap());
-        (f_0, relaxed_vec)
+        (f_0, relaxed_response)
     }
 
-    fn kp_greedy(&self, relaxed: Vec<ItemP>, f_0: Vec<(usize, usize)>) -> ((Vec<[f64; 3]>, i64), (Vec<[f64; 3]>, i64)) {
+    fn kp_greedy(&self, relaxed_original: Vec<[ItemP; 3]>, f_0: Vec<(usize, usize)>) -> LPRelaxationResult {
         let m = self.problem.size;
         let mut remaining_capacity = self.problem.capacity as i64;
         let mut x = vec![[0.0; 3]; m as usize];
@@ -174,6 +184,10 @@ impl EnhancedChromosomeGenerator {
         let mut j: usize = 0;
         let mut v_up = 0;
         let mut v_low = 0;
+
+        // order by e
+        let mut relaxed: Vec<ItemP> = relaxed_original.into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
+        relaxed.sort_by(|a, b| b.e.partial_cmp(&a.e).unwrap());
 
         while remaining_capacity > 0 && j < relaxed.len() {
             let i = relaxed[j].set_index;
@@ -205,7 +219,45 @@ impl EnhancedChromosomeGenerator {
             j += 1;
         }
 
-        ((x_up, v_up), (x, v_low))
+
+        LPRelaxationResult {
+            f_0,
+            x,
+            x_up,
+            v_up,
+            v_low,
+            relaxed,
+        }
+    }
+
+    fn ub_fix(&self, lp_relaxation_result: LPRelaxationResult) {
+        let data = self.problem.data.clone();
+        let mut relaxed = lp_relaxation_result.relaxed;
+        let x_up = lp_relaxation_result.x_up;
+        let mut f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
+        let mut f_1: Vec<(usize, usize)> = vec![];
+        let v_low_best = 2 * lp_relaxation_result.v_low;
+        for index in 0..data.len() {
+            if x_up[index][3] == 1.0 {
+                if f_0.contains(&(index, 1 as usize)) {
+                    let current_set = data[index].clone();
+                    let first = &current_set[0];
+                    let second = &current_set[1];
+                    let first_ratio = first.cost as f64 / first.gain as f64;
+
+                    // equation 13
+                    let is_second_dominated = EnhancedChromosomeGenerator::is_dominant(second, first, first_ratio);
+                    if is_second_dominated {
+                        for item in &mut relaxed {
+                            if item.set_index == index && item.inner_index == 0 {
+                                item.c = 0;
+                                item.a = 0;
+                            }
+                        }
+                    } else {}
+                } else {}
+            }
+        }
     }
 
     fn reset_vectors(x: &mut [f64; 3], x_up: &mut [f64; 3]) {
@@ -228,9 +280,9 @@ impl EnhancedChromosomeGenerator {
         x.iter().all(|&value| value == 0.0)
     }
 
-    fn lp_relaxation(&self) -> ((Vec<[f64; 3]>, i64), (Vec<[f64; 3]>, i64)) {
+    fn lp_relaxation(&self) -> LPRelaxationResult {
         // step 1
-        let (f_0, relaxed) = self.lp_relaxation_sort_by_dominance();
+        let (f_0, relaxed) = self.lp_relaxation_eliminate_by_dominance();
         // step 2 and 3
         self.kp_greedy(relaxed, f_0)
     }
@@ -284,7 +336,7 @@ mod tests {
 
         let mut generator = EnhancedChromosomeGenerator::new(SmallRng::seed_from_u64(1),
                                                              problem);
-        let ((x_up, v_up), (x, v_low)) = generator.lp_relaxation();
+        let result = generator.lp_relaxation();
     }
 
     #[test]
@@ -293,7 +345,7 @@ mod tests {
 
         let mut generator = EnhancedChromosomeGenerator::new(SmallRng::seed_from_u64(1),
                                                              problem);
-        let ((x_up, v_up), (x, v_low)) = generator.lp_relaxation();
+        let result = generator.lp_relaxation();
     }
 }
 
