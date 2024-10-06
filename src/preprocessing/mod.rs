@@ -86,28 +86,28 @@ impl ProblemPreprocessor {
 
             // Check if item (i, 1) is LP-dominated
             if self.is_first_lp_dominated(current_set.clone()) {
-                itemp[0].e = f64::MIN;
+                itemp[0].ratio = f64::MIN;
                 f_0.lock().unwrap().push((index, 0));
             } else {
-                itemp[0].c = current_set[0].gain;
-                itemp[0].a = current_set[0].cost;
-                itemp[0].e = itemp[0].c as f64 / itemp[0].a as f64;
+                itemp[0].gain = current_set[0].gain;
+                itemp[0].cost = current_set[0].cost;
+                itemp[0].ratio = itemp[0].gain as f64 / itemp[0].cost as f64;
             }
 
             // Check if item (i, 2) is LP-dominated
             if self.is_second_lp_dominated(current_set.clone()) {
-                itemp[1].e = f64::MIN;
+                itemp[1].ratio = f64::MIN;
                 f_0.lock().unwrap().push((index, 1));
-                itemp[2].c = current_set[2].gain - itemp[0].c;
-                itemp[2].a = current_set[2].cost - itemp[0].a;
-                itemp[2].e = itemp[2].c as f64 / itemp[2].a as f64;
+                itemp[2].gain = current_set[2].gain - itemp[0].gain;
+                itemp[2].cost = current_set[2].cost - itemp[0].cost;
+                itemp[2].ratio = itemp[2].gain as f64 / itemp[2].cost as f64;
             } else {
-                itemp[1].c = current_set[1].gain - itemp[0].c;
-                itemp[1].a = current_set[1].cost - itemp[0].a;
-                itemp[1].e = itemp[1].c as f64 / itemp[1].a as f64;
-                itemp[2].c = current_set[2].gain - itemp[1].c;
-                itemp[2].a = current_set[2].cost - itemp[1].a;
-                itemp[2].e = itemp[2].c as f64 / itemp[2].a as f64;
+                itemp[1].gain = current_set[1].gain - itemp[0].gain;
+                itemp[1].cost = current_set[1].cost - itemp[0].cost;
+                itemp[1].ratio = itemp[1].gain as f64 / itemp[1].cost as f64;
+                itemp[2].gain = current_set[2].gain - itemp[1].gain;
+                itemp[2].cost = current_set[2].cost - itemp[1].cost;
+                itemp[2].ratio = itemp[2].gain as f64 / itemp[2].cost as f64;
             }
 
             itemp
@@ -127,21 +127,21 @@ impl ProblemPreprocessor {
 
         // order by e
         let mut relaxed: Vec<ItemPreprocessing> = relaxed_original.clone().into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
-        relaxed.sort_by(|a, b| b.e.partial_cmp(&a.e).unwrap());
+        relaxed.sort_by(|a, b| b.ratio.partial_cmp(&a.ratio).unwrap());
 
         while remaining_capacity > 0 && j < relaxed.len() {
             let i = relaxed[j].set_index;
             let k = relaxed[j].inner_index;
-            if remaining_capacity > relaxed[j].a {
-                remaining_capacity -= relaxed[j].a;
-                v_up += relaxed[j].c;
+            if remaining_capacity > relaxed[j].cost {
+                remaining_capacity -= relaxed[j].cost;
+                v_up += relaxed[j].gain;
                 ProblemPreprocessor::reset_vectors(&mut x[i], &mut x_up[i]);
                 x[i][k] = 1.0;
                 x_up[i][k] = 1.0;
             } else {
                 v_low = v_up;
-                x_up[i][k] = remaining_capacity as f64 / relaxed[j].a as f64;
-                v_up += relaxed[j].c * x_up[i][k] as i64;
+                x_up[i][k] = remaining_capacity as f64 / relaxed[j].cost as f64;
+                v_up += relaxed[j].gain * x_up[i][k] as i64;
                 remaining_capacity = 0;
                 ProblemPreprocessor::adjust_vectors(&mut x_up[i], &mut x[i], k);
             }
@@ -151,10 +151,10 @@ impl ProblemPreprocessor {
         while j <= ((3 * m) - (f_0.len() as i32)) as usize {
             let i = relaxed[j].set_index;
             let k = relaxed[j].inner_index;
-            if remaining_capacity > relaxed[j].a && ProblemPreprocessor::all_zero(&x[i]) {
+            if remaining_capacity > relaxed[j].cost && ProblemPreprocessor::all_zero(&x[i]) {
                 x[i][k] = 1.0;
-                v_low += relaxed[j].c;
-                remaining_capacity -= relaxed[j].a;
+                v_low += relaxed[j].gain;
+                remaining_capacity -= relaxed[j].cost;
             }
             j += 1;
         }
@@ -188,25 +188,25 @@ impl ProblemPreprocessor {
                     // equation 13
                     let is_dominated_by_second = ProblemPreprocessor::is_dominant(second, first);
                     if is_dominated_by_second {
-                        temp_relaxed[index][0].c = 0;
-                        temp_relaxed[index][0].a = 0;
-                        temp_relaxed[index][0].e = f64::MIN;
+                        temp_relaxed[index][0].gain = 0;
+                        temp_relaxed[index][0].cost = 0;
+                        temp_relaxed[index][0].ratio = f64::MIN;
                     } else {
-                        temp_relaxed[index][0].c = current_set[0].gain;
-                        temp_relaxed[index][0].a = current_set[0].cost;
-                        temp_relaxed[index][0].e = temp_relaxed[index][0].c as f64 / temp_relaxed[index][0].a as f64;
+                        temp_relaxed[index][0].gain = current_set[0].gain;
+                        temp_relaxed[index][0].cost = current_set[0].cost;
+                        temp_relaxed[index][0].ratio = temp_relaxed[index][0].gain as f64 / temp_relaxed[index][0].cost as f64;
                     }
                 } else {
-                    temp_relaxed[index][0].c = current_set[0].gain;
-                    temp_relaxed[index][0].a = current_set[0].cost;
-                    temp_relaxed[index][0].e = temp_relaxed[index][0].c as f64 / temp_relaxed[index][0].a as f64;
-                    temp_relaxed[index][1].c = current_set[1].gain - temp_relaxed[index][0].c;
-                    temp_relaxed[index][1].a = current_set[1].cost - temp_relaxed[index][0].a;
-                    temp_relaxed[index][1].e = temp_relaxed[index][1].c as f64 / temp_relaxed[index][1].a as f64;
+                    temp_relaxed[index][0].gain = current_set[0].gain;
+                    temp_relaxed[index][0].cost = current_set[0].cost;
+                    temp_relaxed[index][0].ratio = temp_relaxed[index][0].gain as f64 / temp_relaxed[index][0].cost as f64;
+                    temp_relaxed[index][1].gain = current_set[1].gain - temp_relaxed[index][0].gain;
+                    temp_relaxed[index][1].cost = current_set[1].cost - temp_relaxed[index][0].cost;
+                    temp_relaxed[index][1].ratio = temp_relaxed[index][1].gain as f64 / temp_relaxed[index][1].cost as f64;
                 }
-                temp_relaxed[index][2].c = 0;
-                temp_relaxed[index][2].a = 0;
-                temp_relaxed[index][2].e = f64::MIN;
+                temp_relaxed[index][2].gain = 0;
+                temp_relaxed[index][2].cost = 0;
+                temp_relaxed[index][2].ratio = f64::MIN;
 
                 let res_i = self.kp_greedy(temp_relaxed, f_0.clone());
                 if res_i.v_low >= v_low_best {
