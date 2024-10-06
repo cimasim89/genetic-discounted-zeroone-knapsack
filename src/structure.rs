@@ -6,7 +6,9 @@ pub(crate) mod item;
 pub(crate) mod solution;
 pub(crate) mod chromosome;
 pub(crate) mod configuration;
-
+pub(crate) mod ItemPreprocessing;
+pub(crate) mod LPRelaxationResult;
+pub(crate) mod UBFixResult;
 
 pub fn make_problem(capacity: u32,
                     data: Vec<Vec<Item>>,

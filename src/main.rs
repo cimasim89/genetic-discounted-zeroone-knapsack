@@ -15,6 +15,7 @@ mod utils;
 mod genetic;
 mod report;
 mod generator;
+mod preprocessing;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
