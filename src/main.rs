@@ -26,9 +26,6 @@ struct Args {
     #[arg(short, long, default_value_t = 100)]
     no_upgrade_limit: u8,
 
-    #[arg(short, long, default_value_t = 500)]
-    population_size: u32,
-
     #[arg(short, long, default_value_t = 1)]
     seed: u64,
 
@@ -44,9 +41,10 @@ fn main() {
     let args = Args::parse();
     env_logger::Builder::from_env(Env::default().default_filter_or(args.log_level)).init();
     let problem = <Problem as ProblemParser>::parse_input(args.file_path.clone());
+    let population_size = problem.size as u32 * 5;
     let configuration = ConfigurationByGenerations {
         no_upgrade_limit: args.no_upgrade_limit,
-        population_size: args.population_size,
+        population_size,
         seed: args.seed,
     };
     let result_path = match args.result_file_name.as_str() {
@@ -66,7 +64,6 @@ fn main() {
     debug!("Solution: {:?}", solution);
     info!("Elapsed: {:.2?} best: {}", elapsed, solution.fitness);
 
-
     report::Report::generate(
         csv,
         Uuid::new_v4().to_string(),
@@ -74,7 +71,7 @@ fn main() {
         args.file_path.clone(),
         args.seed,
         args.no_upgrade_limit,
-        args.population_size,
+        population_size,
         &solution,
         elapsed,
     );
