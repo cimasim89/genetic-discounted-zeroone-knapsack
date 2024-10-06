@@ -1,7 +1,7 @@
 use crate::structure::chromosome::Chromosome;
+use crate::structure::fix_result::UBFixResult;
 use crate::structure::problem::Problem;
-use crate::structure::LPRelaxationResult::LPRelaxationResult;
-use crate::structure::UBFixResult::UBFixResult;
+use crate::structure::relaxation_result::LPRelaxationResult;
 use rand::prelude::SmallRng;
 use rand::Rng;
 

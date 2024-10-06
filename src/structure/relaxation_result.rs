@@ -1,4 +1,4 @@
-use crate::structure::ItemPreprocessing::ItemPreprocessing;
+use crate::structure::item_preprocessing::ItemPreprocessing;
 
 #[derive(Clone)]
 pub struct LPRelaxationResult {

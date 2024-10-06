@@ -1,8 +1,8 @@
+use crate::structure::fix_result::UBFixResult;
 use crate::structure::item::Item;
+use crate::structure::item_preprocessing::ItemPreprocessing;
 use crate::structure::problem::Problem;
-use crate::structure::ItemPreprocessing::ItemPreprocessing;
-use crate::structure::LPRelaxationResult::LPRelaxationResult;
-use crate::structure::UBFixResult::UBFixResult;
+use crate::structure::relaxation_result::LPRelaxationResult;
 use rand::prelude::SmallRng;
 use rand::Rng;
 use rayon::prelude::*;
@@ -11,7 +11,6 @@ use std::sync::Mutex;
 pub struct ProblemPreprocessor {
     problem: Problem,
     rng: SmallRng,
-    processed_data: Vec<Item>,
     relaxation_result: LPRelaxationResult,
     ub_fix_result: UBFixResult,
 }
@@ -21,7 +20,6 @@ impl ProblemPreprocessor {
         let mut instance = ProblemPreprocessor {
             problem,
             rng,
-            processed_data: vec![],
             relaxation_result: LPRelaxationResult::new(),
             ub_fix_result: UBFixResult::new(),
         };
