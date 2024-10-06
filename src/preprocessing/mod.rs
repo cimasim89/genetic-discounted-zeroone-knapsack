@@ -289,23 +289,23 @@ mod tests {
     #[test]
     fn test_lp_relaxation() {
         let problem = make_problem();
-        let generator = ProblemPreprocessor::new(problem);
-        let result = generator.lp_relaxation();
+        let preprocessor = ProblemPreprocessor::new(problem);
+        let result = preprocessor.lp_relaxation();
     }
 
     #[test]
     fn test_lp_relaxation_low_capacity() {
         let problem = make_problem_low_capacity();
-        let generator = ProblemPreprocessor::new(problem);
-        let result = generator.lp_relaxation();
+        let preprocessor = ProblemPreprocessor::new(problem);
+        let result = preprocessor.lp_relaxation();
     }
 
 
     #[test]
     fn test_process_problem_low_capacity() {
         let problem = make_problem_low_capacity();
-        let mut generator = ProblemPreprocessor::new(problem);
-        generator.process_problem();
+        let mut preprocessor = ProblemPreprocessor::new(problem);
+        preprocessor.process_problem();
     }
 }
 

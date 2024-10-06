@@ -34,10 +34,8 @@ function test_all {
     if [ -d "$folder" ]; then
       for file in "$folder"/*; do
         if [ -f "$file" ]; then
-          for seed in {1..10}; do
-            echo "Running cargo for $file with seed $seed"
-            cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error"
-          done
+          echo "Running cargo for $file"
+          cargo run -r -- -f "$file" -t 10 -r "$csv_file" -l "error"
         fi
       done
     fi
@@ -54,10 +52,8 @@ function test_specific_instance {
   echo "metrics saved in $csv_file"
   for file in instances/$instance_kind/*; do
     if [ -f "$file" ]; then
-      for seed in {1..10}; do
-        echo "Running cargo for $file with seed $seed"
-        cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error"
-      done
+      echo "Running cargo for $file"
+      cargo run -r -- -f "$file" -t 10 -r "$csv_file" -l "error"
     fi
   done
 

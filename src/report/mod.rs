@@ -22,6 +22,8 @@ pub(crate) trait Exporter {
     fn export(&self, row: Metric);
 }
 
+
+#[derive(Clone)]
 pub(crate) struct CSV {
     pub(crate) path: String,
 }
