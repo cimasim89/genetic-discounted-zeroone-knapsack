@@ -120,8 +120,8 @@ impl ProblemPreprocessor {
         let mut x = vec![[0.0; 3]; m as usize];
         let mut x_up = vec![[0.0; 3]; m as usize];
         let mut j: usize = 0;
-        let mut v_up = 0;
-        let mut v_low = 0;
+        let mut v_up = 0.0;
+        let mut v_low = 0.0;
 
         // order by e
         let mut relaxed: Vec<ItemPreprocessing> = relaxed_original.clone().into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
@@ -132,14 +132,14 @@ impl ProblemPreprocessor {
             let k = relaxed[j].inner_index;
             if remaining_capacity > relaxed[j].cost {
                 remaining_capacity -= relaxed[j].cost;
-                v_up += relaxed[j].gain;
+                v_up += relaxed[j].gain as f64;
                 ProblemPreprocessor::reset_vectors(&mut x[i], &mut x_up[i]);
                 x[i][k] = 1.0;
                 x_up[i][k] = 1.0;
             } else {
                 v_low = v_up;
                 x_up[i][k] = remaining_capacity as f64 / relaxed[j].cost as f64;
-                v_up += relaxed[j].gain * x_up[i][k] as i64;
+                v_up += relaxed[j].gain as f64 * x_up[i][k];
                 remaining_capacity = 0;
                 ProblemPreprocessor::adjust_vectors(&mut x_up[i], &mut x[i], k);
             }
@@ -151,7 +151,7 @@ impl ProblemPreprocessor {
             let k = relaxed[j].inner_index;
             if remaining_capacity > relaxed[j].cost && ProblemPreprocessor::all_zero(&x[i]) {
                 x[i][k] = 1.0;
-                v_low += relaxed[j].gain;
+                v_low += relaxed[j].gain as f64;
                 remaining_capacity -= relaxed[j].cost;
             }
             j += 1;
@@ -173,7 +173,7 @@ impl ProblemPreprocessor {
         let x_up = lp_relaxation_result.x_up;
         let mut f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
         let mut f_1: Vec<(usize, usize)> = vec![];
-        let mut v_low_best = 2 * lp_relaxation_result.v_low;
+        let mut v_low_best = 2.0 * lp_relaxation_result.v_low;
         let mut x_best = lp_relaxation_result.x.clone();
         for index in 0..data.len() {
             let mut temp_relaxed = lp_relaxation_result.relaxed.clone();
@@ -211,7 +211,7 @@ impl ProblemPreprocessor {
                     v_low_best = res_i.v_low;
                     x_best = res_i.x;
                 }
-                if res_i.v_up <= v_low_best {
+                if res_i.v_up.floor() <= v_low_best {
                     f_1.push((index, 1));
                 }
             }
