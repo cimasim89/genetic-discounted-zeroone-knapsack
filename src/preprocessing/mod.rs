@@ -3,23 +3,19 @@ use crate::structure::item::Item;
 use crate::structure::item_preprocessing::ItemPreprocessing;
 use crate::structure::problem::Problem;
 use crate::structure::relaxation_result::LPRelaxationResult;
-use rand::prelude::SmallRng;
-use rand::Rng;
 use rayon::prelude::*;
 use std::sync::Mutex;
 
 pub struct ProblemPreprocessor {
     problem: Problem,
-    rng: SmallRng,
     relaxation_result: LPRelaxationResult,
     ub_fix_result: UBFixResult,
 }
 
 impl ProblemPreprocessor {
-    pub fn new(rng: SmallRng, problem: Problem) -> Self {
+    pub fn new(problem: Problem) -> Self {
         let mut instance = ProblemPreprocessor {
             problem,
-            rng,
             relaxation_result: LPRelaxationResult::new(),
             ub_fix_result: UBFixResult::new(),
         };
@@ -171,7 +167,7 @@ impl ProblemPreprocessor {
     fn ub_fix(&self, lp_relaxation_result: LPRelaxationResult) -> UBFixResult {
         let data = self.problem.data.clone();
         let x_up = lp_relaxation_result.x_up;
-        let mut f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
+        let f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
         let mut f_1: Vec<(usize, usize)> = vec![];
         let mut v_low_best = 2.0 * lp_relaxation_result.v_low;
         let mut x_best = lp_relaxation_result.x.clone();
@@ -265,7 +261,6 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use crate::structure::make_item;
-    use rand::SeedableRng;
 
     fn make_problem() -> Problem {
         let capacity = 50;
@@ -294,18 +289,14 @@ mod tests {
     #[test]
     fn test_lp_relaxation() {
         let problem = make_problem();
-
-        let mut generator = ProblemPreprocessor::new(SmallRng::seed_from_u64(1),
-                                                     problem);
+        let generator = ProblemPreprocessor::new(problem);
         let result = generator.lp_relaxation();
     }
 
     #[test]
     fn test_lp_relaxation_low_capacity() {
         let problem = make_problem_low_capacity();
-
-        let mut generator = ProblemPreprocessor::new(SmallRng::seed_from_u64(1),
-                                                     problem);
+        let generator = ProblemPreprocessor::new(problem);
         let result = generator.lp_relaxation();
     }
 
@@ -313,9 +304,7 @@ mod tests {
     #[test]
     fn test_process_problem_low_capacity() {
         let problem = make_problem_low_capacity();
-
-        let mut generator = ProblemPreprocessor::new(SmallRng::seed_from_u64(1),
-                                                     problem);
+        let mut generator = ProblemPreprocessor::new(problem);
         generator.process_problem();
     }
 }
