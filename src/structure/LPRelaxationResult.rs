@@ -9,3 +9,16 @@ pub struct LPRelaxationResult {
     pub(crate) v_low: i64,
     pub(crate) relaxed: Vec<[ItemPreprocessing; 3]>,
 }
+
+impl LPRelaxationResult {
+    pub(crate) fn new() -> Self {
+        LPRelaxationResult {
+            f_0: vec![],
+            x_up: vec![],
+            x: vec![],
+            v_up: 0,
+            v_low: 0,
+            relaxed: vec![],
+        }
+    }
+}

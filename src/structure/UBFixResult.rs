@@ -4,3 +4,13 @@ pub(crate) struct UBFixResult {
     pub(crate) x_best: Vec<[f64; 3]>,
     pub(crate) v_best: i64,
 }
+
+impl UBFixResult {
+    pub(crate) fn new() -> Self {
+        UBFixResult {
+            f_1: vec![],
+            x_best: vec![],
+            v_best: 0,
+        }
+    }
+}

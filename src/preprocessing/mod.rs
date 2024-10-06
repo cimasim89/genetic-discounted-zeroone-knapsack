@@ -22,19 +22,8 @@ impl ProblemPreprocessor {
             problem,
             rng,
             processed_data: vec![],
-            relaxation_result: LPRelaxationResult {
-                f_0: vec![],
-                x_up: vec![],
-                x: vec![],
-                v_up: 0,
-                v_low: 0,
-                relaxed: vec![],
-            },
-            ub_fix_result: UBFixResult {
-                f_1: vec![],
-                x_best: vec![],
-                v_best: 0,
-            },
+            relaxation_result: LPRelaxationResult::new(),
+            ub_fix_result: UBFixResult::new(),
         };
         instance.process_problem();
         instance
