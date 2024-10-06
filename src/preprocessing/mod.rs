@@ -6,21 +6,20 @@ use crate::structure::relaxation_result::LPRelaxationResult;
 use rayon::prelude::*;
 use std::sync::Mutex;
 
-pub struct ProblemPreprocessor {
-    problem: Problem,
-    relaxation_result: LPRelaxationResult,
-    ub_fix_result: UBFixResult,
+pub struct ProblemPreprocessor<'a> {
+    problem: &'a Problem,
 }
 
-impl ProblemPreprocessor {
-    pub fn new(problem: Problem) -> Self {
-        let mut instance = ProblemPreprocessor {
-            problem,
-            relaxation_result: LPRelaxationResult::new(),
-            ub_fix_result: UBFixResult::new(),
-        };
-        instance.process_problem();
-        instance
+pub struct PreprocessingResult {
+    pub relaxation_result: LPRelaxationResult,
+    pub ub_fix_result: UBFixResult,
+}
+
+impl<'a> ProblemPreprocessor<'a> {
+    pub fn new(problem: &'a Problem) -> Self {
+        ProblemPreprocessor {
+            problem
+        }
     }
 
     fn is_dominant(dominant: &Item, to_check: &Item) -> bool {
@@ -169,7 +168,7 @@ impl ProblemPreprocessor {
         let x_up = lp_relaxation_result.x_up;
         let f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
         let mut f_1: Vec<(usize, usize)> = vec![];
-        let mut v_low_best = 2.0 * lp_relaxation_result.v_low;
+        let mut v_low_best = lp_relaxation_result.v_low;
         let mut x_best = lp_relaxation_result.x.clone();
         for index in 0..data.len() {
             let mut temp_relaxed = lp_relaxation_result.relaxed.clone();
@@ -247,11 +246,13 @@ impl ProblemPreprocessor {
         self.kp_greedy(relaxed, f_0)
     }
 
-    fn process_problem(&mut self) {
+    pub(crate) fn process_problem(&mut self) -> PreprocessingResult {
         let relaxation_result = self.lp_relaxation();
         let ub_fix_result = self.ub_fix(relaxation_result.clone());
-        self.relaxation_result = relaxation_result;
-        self.ub_fix_result = ub_fix_result;
+        PreprocessingResult {
+            relaxation_result,
+            ub_fix_result,
+        }
     }
 }
 
@@ -289,22 +290,22 @@ mod tests {
     #[test]
     fn test_lp_relaxation() {
         let problem = make_problem();
-        let preprocessor = ProblemPreprocessor::new(problem);
-        let result = preprocessor.lp_relaxation();
+        let preprocessor = ProblemPreprocessor::new(&problem);
+        let _result = preprocessor.lp_relaxation();
     }
 
     #[test]
     fn test_lp_relaxation_low_capacity() {
         let problem = make_problem_low_capacity();
-        let preprocessor = ProblemPreprocessor::new(problem);
-        let result = preprocessor.lp_relaxation();
+        let preprocessor = ProblemPreprocessor::new(&problem);
+        let _result = preprocessor.lp_relaxation();
     }
 
 
     #[test]
     fn test_process_problem_low_capacity() {
         let problem = make_problem_low_capacity();
-        let mut preprocessor = ProblemPreprocessor::new(problem);
+        let mut preprocessor = ProblemPreprocessor::new(&problem);
         preprocessor.process_problem();
     }
 }
