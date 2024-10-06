@@ -16,7 +16,7 @@ pub trait GeneticAlgorithm<'a> {
 }
 
 pub struct KnapsackGeneticAlgorithm<'a> {
-    best_fitness: i64,
+    best: Chromosome,
     remain_no_improved_generations: u8,
     configuration: Box<dyn Configuration>,
     population: Vec<Chromosome>,
@@ -29,7 +29,7 @@ pub struct KnapsackGeneticAlgorithm<'a> {
 impl<'a> KnapsackGeneticAlgorithm<'a> {
     pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>, preprocessing_result: &'a PreprocessingResult) -> Self {
         KnapsackGeneticAlgorithm {
-            best_fitness: 0,
+            best: Chromosome::init_chromosome(vec![]),
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
             rng: utils::make_rng(configuration.get_seed()),
             configuration,
@@ -97,7 +97,7 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         debug!("Initializing population...");
 
         let mut generated = self.configuration.get_population_size();
-        let best_preprocess = self.preprocessing_result.relaxation_result.x.clone();
+        let best_preprocess = self.preprocessing_result.ub_fix_result.x_best.clone();
 
         if best_preprocess.len() > 0 {
             let mut chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
@@ -252,9 +252,9 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         });
     }
 
-    fn check_is_end(&mut self, curr_fitness: i64) -> bool {
-        if curr_fitness > self.best_fitness {
-            self.best_fitness = curr_fitness;
+    fn check_is_end(&mut self, new_chromosome: Chromosome) -> bool {
+        if new_chromosome.fitness > self.best.fitness {
+            self.best = new_chromosome;
             self.remain_no_improved_generations = self.configuration.get_no_upgrade_limit();
             return false;
         }
@@ -270,7 +270,7 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
     fn evolve(&mut self) -> (Chromosome, u32) {
         let mut generation: u32 = 0;
         let mut condition = true;
-        let mut best: Chromosome = match self.population.first() {
+        let mut current_best: Chromosome = match self.population.first() {
             None => { panic!("Population has not been initialized!") }
             Some(c) => {
                 c.clone()
@@ -278,16 +278,16 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         };
 
         while condition {
-            info!("Evolving population generation: {} current best fitness: {}", generation, self.best_fitness);
+            info!("Evolving population generation: {} current best fitness: {}", generation, self.best.fitness);
             self.evaluate();
-            best = match self.population.first() {
+            current_best = match self.population.first() {
                 None => { panic!("Problem occurs during evolution!") }
                 Some(c) => {
                     c.clone()
                 }
             };
 
-            if self.check_is_end(best.fitness) {
+            if self.check_is_end(current_best) {
                 condition = false;
             } else {
                 self.select();
@@ -301,7 +301,7 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
             self.mutation_factor -= 1;
         }
 
-        (best, generation)
+        (self.best.clone(), generation)
     }
 }
 
