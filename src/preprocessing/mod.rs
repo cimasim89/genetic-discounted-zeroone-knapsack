@@ -4,7 +4,6 @@ use crate::structure::item_preprocessing::ItemPreprocessing;
 use crate::structure::problem::Problem;
 use crate::structure::relaxation_result::LPRelaxationResult;
 use rayon::prelude::*;
-use std::sync::Mutex;
 
 pub struct ProblemPreprocessor<'a> {
     problem: &'a Problem,
@@ -23,10 +22,9 @@ impl<'a> ProblemPreprocessor<'a> {
     }
 
     fn is_dominant(dominant: &Item, to_check: &Item) -> bool {
-        let to_check_ratio = to_check.cost as f64 / to_check.gain as f64;
         let gain_difference = dominant.gain as f64 - to_check.gain as f64;
         let cost_difference = dominant.cost as f64 - to_check.cost as f64;
-        (gain_difference / cost_difference) >= to_check_ratio
+        (gain_difference / cost_difference) >= to_check.gain as f64 / to_check.cost as f64
     }
 
     fn is_ranged_dominated(up: &Item, down: &Item, to_check: &Item) -> bool {
@@ -34,7 +32,7 @@ impl<'a> ProblemPreprocessor<'a> {
         let up_cost_difference = up.cost as f64 - to_check.cost as f64;
 
         let down_gain_difference = to_check.gain as f64 - down.gain as f64;
-        let down_cost_difference = to_check.cost as f64 - up.cost as f64;
+        let down_cost_difference = to_check.cost as f64 - down.cost as f64;
         (up_gain_difference / up_cost_difference) >= (down_gain_difference / down_cost_difference)
     }
 
@@ -68,9 +66,9 @@ impl<'a> ProblemPreprocessor<'a> {
 
     fn lp_relaxation_eliminate_by_dominance(&self) -> (Vec<(usize, usize)>, Vec<[ItemPreprocessing; 3]>) {
         let data = self.problem.data.clone();
-        let f_0 = Mutex::new(vec![]);
+        let mut f_0 = vec![];
 
-        let relaxed_response: Vec<[ItemPreprocessing; 3]> = data.par_iter().enumerate().map(|(index, current_set)| {
+        let relaxed_response: Vec<[ItemPreprocessing; 3]> = data.iter().enumerate().map(|(index, current_set)| {
             let mut itemp: [ItemPreprocessing; 3] = [
                 ItemPreprocessing::new(0, 0, 0.0, index, 0),
                 ItemPreprocessing::new(0, 0, 0.0, index, 1),
@@ -80,7 +78,7 @@ impl<'a> ProblemPreprocessor<'a> {
             // Check if item (i, 1) is LP-dominated
             if self.is_first_lp_dominated(current_set.clone()) {
                 itemp[0].ratio = f64::MIN;
-                f_0.lock().unwrap().push((index, 0));
+                f_0.push((index, 0));
             } else {
                 itemp[0].gain = current_set[0].gain;
                 itemp[0].cost = current_set[0].cost;
@@ -90,7 +88,7 @@ impl<'a> ProblemPreprocessor<'a> {
             // Check if item (i, 2) is LP-dominated
             if self.is_second_lp_dominated(current_set.clone()) {
                 itemp[1].ratio = f64::MIN;
-                f_0.lock().unwrap().push((index, 1));
+                f_0.push((index, 1));
                 itemp[2].gain = current_set[2].gain - itemp[0].gain;
                 itemp[2].cost = current_set[2].cost - itemp[0].cost;
                 itemp[2].ratio = itemp[2].gain as f64 / itemp[2].cost as f64;
@@ -106,9 +104,8 @@ impl<'a> ProblemPreprocessor<'a> {
             itemp
         }).collect();
 
-        (f_0.into_inner().unwrap(), relaxed_response)
+        (f_0, relaxed_response)
     }
-
     fn kp_greedy(&self, relaxed_original: Vec<[ItemPreprocessing; 3]>, f_0: Vec<(usize, usize)>) -> LPRelaxationResult {
         let m = self.problem.size;
         let mut remaining_capacity = self.problem.capacity as i64;
@@ -119,7 +116,7 @@ impl<'a> ProblemPreprocessor<'a> {
         let mut v_low = 0.0;
 
         // order by e
-        let mut relaxed: Vec<ItemPreprocessing> = relaxed_original.clone().into_iter().flat_map(|inner_vec| inner_vec.into_iter()).collect();
+        let mut relaxed: Vec<&ItemPreprocessing> = relaxed_original.iter().flat_map(|inner_vec| inner_vec.iter()).collect();
         relaxed.sort_by(|a, b| b.ratio.partial_cmp(&a.ratio).unwrap());
 
         while remaining_capacity > 0 && j < relaxed.len() {
@@ -128,7 +125,8 @@ impl<'a> ProblemPreprocessor<'a> {
             if remaining_capacity > relaxed[j].cost {
                 remaining_capacity -= relaxed[j].cost;
                 v_up += relaxed[j].gain as f64;
-                ProblemPreprocessor::reset_vectors(&mut x[i], &mut x_up[i]);
+                x[i].fill(0.0);
+                x_up[i].fill(0.0);
                 x[i][k] = 1.0;
                 x_up[i][k] = 1.0;
             } else {
@@ -136,12 +134,17 @@ impl<'a> ProblemPreprocessor<'a> {
                 x_up[i][k] = remaining_capacity as f64 / relaxed[j].cost as f64;
                 v_up += relaxed[j].gain as f64 * x_up[i][k];
                 remaining_capacity = 0;
-                ProblemPreprocessor::adjust_vectors(&mut x_up[i], &mut x[i], k);
+                for inner_k in 0..3 {
+                    if inner_k != k && x_up[i][inner_k] == 1.0 {
+                        x_up[i][inner_k] = 1.0 - x_up[i][k];
+                        x[i][inner_k] = 0.0;
+                    }
+                }
             }
             j += 1;
         }
 
-        while j <= ((3 * m) - (f_0.len() as i32)) as usize {
+        while j < ((3 * m) - (f_0.len() as i32)) as usize {
             let i = relaxed[j].set_index;
             let k = relaxed[j].inner_index;
             if remaining_capacity > relaxed[j].cost && ProblemPreprocessor::all_zero(&x[i]) {
@@ -168,7 +171,7 @@ impl<'a> ProblemPreprocessor<'a> {
         let x_up = lp_relaxation_result.x_up;
         let f_0: Vec<(usize, usize)> = lp_relaxation_result.f_0;
         let mut f_1: Vec<(usize, usize)> = vec![];
-        let mut v_low_best = lp_relaxation_result.v_low;
+        let mut v_low_best = 2.0 * lp_relaxation_result.v_low;
         let mut x_best = lp_relaxation_result.x.clone();
         for index in 0..data.len() {
             let mut temp_relaxed = lp_relaxation_result.relaxed.clone();
@@ -216,22 +219,6 @@ impl<'a> ProblemPreprocessor<'a> {
             f_1,
             x_best,
             v_best: v_low_best,
-        }
-    }
-
-    fn reset_vectors(x: &mut [f64; 3], x_up: &mut [f64; 3]) {
-        for inner in 0..3 {
-            x[inner] = 0.0;
-            x_up[inner] = 0.0;
-        }
-    }
-
-    fn adjust_vectors(x_up: &mut [f64; 3], x: &mut [f64; 3], k: usize) {
-        for inner_k in 0..3 {
-            if inner_k != k && x_up[inner_k] == 1.0 {
-                x_up[inner_k] = 1.0 - x_up[k];
-                x[inner_k] = 0.0;
-            }
         }
     }
 
@@ -285,6 +272,28 @@ mod tests {
         let size = data.len() as i32;
 
         Problem { capacity, data, size }
+    }
+
+    fn make_test_problem() -> Problem {
+        let capacity = 50;
+        let data = vec![
+            vec![make_item(10, 5), make_item(20, 10), make_item(30, 14)],
+            vec![make_item(15, 7), make_item(25, 12), make_item(40, 15)],
+        ];
+        let size = data.len() as i32;
+
+        Problem { capacity, data, size }
+    }
+
+    #[test]
+    fn test_lp_relaxation_eliminate_by_dominance() {
+        let problem = make_test_problem();
+        let preprocessor = ProblemPreprocessor::new(&problem);
+        let (f_0, relaxed_response) = preprocessor.lp_relaxation_eliminate_by_dominance();
+
+        // Check the results
+        assert_eq!(f_0.len(), 4);
+        assert_eq!(relaxed_response.len(), 2);
     }
 
     #[test]

@@ -1,6 +1,7 @@
 use rand::rngs::SmallRng;
 use rand::Rng;
 
+use crate::preprocessing::PreprocessingResult;
 use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::Configuration;
 use crate::structure::item::Item;
@@ -9,13 +10,12 @@ use crate::structure::solution::Solution;
 use crate::utils;
 use log::{debug, info};
 
-
-pub trait GeneticAlgorithm {
-    fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self;
+pub trait GeneticAlgorithm<'a> {
+    fn init(problem: Problem, configuration: Box<dyn Configuration>, preprocessing_result: &'a PreprocessingResult) -> Self;
     fn run(&mut self) -> Solution;
 }
 
-pub struct KnapsackGeneticAlgorithm {
+pub struct KnapsackGeneticAlgorithm<'a> {
     best_fitness: i64,
     remain_no_improved_generations: u8,
     configuration: Box<dyn Configuration>,
@@ -23,10 +23,11 @@ pub struct KnapsackGeneticAlgorithm {
     problem: Problem,
     rng: SmallRng,
     mutation_factor: u16,
+    preprocessing_result: &'a PreprocessingResult,
 }
 
-impl KnapsackGeneticAlgorithm {
-    pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
+impl<'a> KnapsackGeneticAlgorithm<'a> {
+    pub(crate) fn new(problem: Problem, configuration: Box<dyn Configuration>, preprocessing_result: &'a PreprocessingResult) -> Self {
         KnapsackGeneticAlgorithm {
             best_fitness: 0,
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
@@ -35,6 +36,7 @@ impl KnapsackGeneticAlgorithm {
             population: vec![],
             problem,
             mutation_factor: 10,
+            preprocessing_result,
         }
     }
 
@@ -95,6 +97,14 @@ impl KnapsackGeneticAlgorithm {
         debug!("Initializing population...");
 
         let mut generated = self.configuration.get_population_size();
+        let best_preprocess = self.preprocessing_result.relaxation_result.x.clone();
+
+        if best_preprocess.len() > 0 {
+            let mut chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
+            chromosome = self.repair_chromosome(&chromosome, self.problem.capacity);
+            self.population.push(chromosome);
+            generated -= 1;
+        }
 
         while generated > 0 {
             let mut genes = Vec::new();
@@ -107,6 +117,21 @@ impl KnapsackGeneticAlgorithm {
             self.population.push(chromosome);
             generated -= 1;
         }
+    }
+
+    fn map_preprocessed_item_to_chromosome(best_preprocess: Vec<[f64; 3]>) -> Chromosome {
+        let mut genes = Vec::new();
+        best_preprocess.iter().for_each(|x| {
+            let mut value = 3;
+            for v in x.iter().rev() {
+                if *v == 1.0 {
+                    break;
+                }
+                value -= 1;
+            }
+            genes.push(value);
+        });
+        Chromosome::init_chromosome(genes)
     }
 
 
@@ -281,9 +306,9 @@ impl KnapsackGeneticAlgorithm {
 }
 
 
-impl GeneticAlgorithm for KnapsackGeneticAlgorithm {
-    fn init(problem: Problem, configuration: Box<dyn Configuration>) -> Self {
-        let mut executor = KnapsackGeneticAlgorithm::new(problem, configuration);
+impl<'a> GeneticAlgorithm<'a> for KnapsackGeneticAlgorithm<'a> {
+    fn init(problem: Problem, configuration: Box<dyn Configuration>, preprocessing_result: &'a PreprocessingResult) -> Self {
+        let mut executor = KnapsackGeneticAlgorithm::new(problem, configuration, preprocessing_result);
         executor.initialize_population();
         executor
     }
@@ -297,7 +322,25 @@ impl GeneticAlgorithm for KnapsackGeneticAlgorithm {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use crate::genetic::KnapsackGeneticAlgorithm;
 
+    #[test]
+    fn test_map_preprocessed_item_to_chromosome() {
+        let best_preprocess = vec![
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 0.0],
+        ];
+
+        let chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
+        let expected_genes = vec![1, 2, 3, 0];
+
+        assert_eq!(chromosome.genes, expected_genes);
+    }
+}
 
 
 

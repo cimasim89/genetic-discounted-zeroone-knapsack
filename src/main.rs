@@ -2,6 +2,7 @@ use std::time::SystemTime;
 
 use crate::genetic::{GeneticAlgorithm, KnapsackGeneticAlgorithm};
 use crate::parser::*;
+use crate::preprocessing::ProblemPreprocessor;
 use crate::report::Report;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
@@ -51,6 +52,10 @@ fn main() {
         path: result_path,
     };
 
+
+    let mut preprocessor = ProblemPreprocessor::new(&problem);
+    let preprocessing_result = preprocessor.process_problem();
+
     for i in 0..args.times {
         let configuration = ConfigurationByGenerations {
             no_upgrade_limit: args.no_upgrade_limit,
@@ -59,7 +64,11 @@ fn main() {
         };
 
         let start = SystemTime::now();
-        let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(problem.clone(), Box::new(configuration));
+        let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(
+            problem.clone(),
+            Box::new(configuration),
+            &preprocessing_result,
+        );
         let solution = executor.run();
         let elapsed = start.elapsed().unwrap();
 
