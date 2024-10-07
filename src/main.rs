@@ -25,7 +25,7 @@ struct Args {
     #[arg(short, long)]
     file_path: String,
 
-    #[arg(short, long, default_value_t = 100)]
+    #[arg(short, long, default_value_t = 128)]
     no_upgrade_limit: u8,
 
     #[arg(short, long, default_value_t = 1)]

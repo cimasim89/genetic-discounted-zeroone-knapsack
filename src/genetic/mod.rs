@@ -1,6 +1,7 @@
 use rand::rngs::SmallRng;
 use rand::Rng;
 
+use crate::generator::{EnhancedChromosomeGenerator, RandomChromosomeGenerator};
 use crate::preprocessing::PreprocessingResult;
 use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::Configuration;
@@ -75,7 +76,8 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
     }
 
 
-    fn repair_chromosome(&self, chromosome: &Chromosome, capacity: u32) -> Chromosome {
+    fn repair_chromosome(&self, chromosome: &Chromosome) -> Chromosome {
+        let capacity = self.problem.capacity;
         let mut c = chromosome.clone();
         let mut genes = chromosome.genes.clone();
         let mut cost = self.get_chromosome_summary(&chromosome).1;
@@ -95,25 +97,39 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
 
     fn initialize_population(&mut self) {
         debug!("Initializing population...");
-
         let mut generated = self.configuration.get_population_size();
         let best_preprocess = self.preprocessing_result.ub_fix_result.x_best.clone();
 
         if best_preprocess.len() > 0 {
             let mut chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
-            chromosome = self.repair_chromosome(&chromosome, self.problem.capacity);
+            chromosome = self.repair_chromosome(&chromosome);
             self.population.push(chromosome);
             generated -= 1;
         }
 
+        let mut enanched_gen = EnhancedChromosomeGenerator::new(self.problem.clone(),
+                                                                self.configuration.get_seed(),
+                                                                self.preprocessing_result.relaxation_result.clone(),
+                                                                self.preprocessing_result.ub_fix_result.clone());
+        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
+            let mut chromosome = enanched_gen.generate_chromosome_f1();
+            chromosome = self.repair_chromosome(&chromosome);
+            self.population.push(chromosome);
+            generated -= 1;
+        }
+
+        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
+            let mut chromosome = enanched_gen.generate_chromosome_f0();
+            chromosome = self.repair_chromosome(&chromosome);
+            self.population.push(chromosome);
+            generated -= 1;
+        }
+
+
         while generated > 0 {
-            let mut genes = Vec::new();
-            for _ in 0..self.problem.size {
-                // actually 0 is no selection
-                genes.push(self.rng.gen_range(0..4));
-            }
-            let mut chromosome = Chromosome::init_chromosome(genes);
-            chromosome = self.repair_chromosome(&chromosome, self.problem.capacity);
+            let mut chromosome =
+                RandomChromosomeGenerator::new(self.problem.clone(), self.configuration.get_seed()).generate_chromosome();
+            chromosome = self.repair_chromosome(&chromosome);
             self.population.push(chromosome);
             generated -= 1;
         }
@@ -212,9 +228,9 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         }
 
         let mut child1 = Chromosome::init_chromosome(child1_genes);
-        child1 = self.repair_chromosome(&child1, self.problem.capacity);
+        child1 = self.repair_chromosome(&child1);
         let mut child2 = Chromosome::init_chromosome(child2_genes);
-        child2 = self.repair_chromosome(&child2, self.problem.capacity);
+        child2 = self.repair_chromosome(&child2);
 
         (child1, child2)
     }
