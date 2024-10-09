@@ -1,14 +1,13 @@
-use std::time::SystemTime;
-
 use crate::genetic::{GeneticAlgorithm, KnapsackGeneticAlgorithm};
 use crate::parser::*;
-use crate::preprocessing::ProblemPreprocessor;
+use crate::preprocessing::{PreprocessingResult, ProblemPreprocessor};
 use crate::report::Report;
 use crate::structure::configuration::ConfigurationByGenerations;
 use crate::structure::problem::Problem;
 use clap::Parser;
 use env_logger::Env;
 use log::{debug, info};
+use std::time::SystemTime;
 use uuid::Uuid;
 
 mod parser;
@@ -41,32 +40,30 @@ struct Args {
     log_level: String,
 }
 
+fn parse_args() -> Args {
+    Args::parse()
+}
 
-fn main() {
-    let args = Args::parse();
-    env_logger::Builder::from_env(Env::default().default_filter_or(args.log_level)).init();
-    let problem = <Problem as ProblemParser>::parse_input(args.file_path.clone());
-    let population_size = problem.size as u32 * 5;
-    let result_path = match args.result_file_name.as_str() {
-        "" => "metrics.csv".to_string(),
-        _ => args.result_file_name,
-    };
-    let csv = report::CSV {
-        path: result_path,
-    };
+fn initialize_problem(file_path: &str) -> Problem {
+    <Problem as ProblemParser>::parse_input(file_path.to_string())
+}
 
+fn initialize_preprocessor(problem: &Problem) -> ProblemPreprocessor {
+    ProblemPreprocessor::new(problem)
+}
 
-    let mut preprocessor = ProblemPreprocessor::new(&problem);
-    let preprocessing_result = preprocessor.process_problem();
+fn initialize_configuration(args: &Args, seed: u64, population_size: u32) -> ConfigurationByGenerations {
+    ConfigurationByGenerations {
+        initial_mutation_factor: args.initial_mutation_factor,
+        no_upgrade_limit: args.no_upgrade_limit,
+        population_size,
+        seed,
+    }
+}
 
+fn execute_algorithm(args: &Args, problem: &Problem, preprocessing_result: &PreprocessingResult, csv: &report::CSV) {
     for i in 0..args.times {
-        let configuration = ConfigurationByGenerations {
-            initial_mutation_factor: args.initial_mutation_factor,
-            no_upgrade_limit: args.no_upgrade_limit,
-            population_size,
-            seed: i,
-        };
-
+        let configuration = initialize_configuration(args, i, problem.size as u32 * 5);
         let start = SystemTime::now();
         let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(
             problem.clone(),
@@ -86,9 +83,21 @@ fn main() {
             args.file_path.clone(),
             i,
             args.no_upgrade_limit,
-            population_size,
+            problem.size as u32 * 5,
             &solution,
             elapsed,
         );
     }
+}
+
+fn main() {
+    let args = parse_args();
+    env_logger::Builder::from_env(Env::default().default_filter_or(&args.log_level)).init();
+    let problem = initialize_problem(&args.file_path);
+    let mut preprocessor = initialize_preprocessor(&problem);
+    let csv = report::CSV {
+        path: if args.result_file_name.is_empty() { "metrics.csv".to_string() } else { args.result_file_name.clone() },
+    };
+    let preprocessing_result = preprocessor.process_problem();
+    execute_algorithm(&args, &problem, &preprocessing_result, &csv);
 }
