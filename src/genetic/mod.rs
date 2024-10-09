@@ -106,6 +106,13 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         );
 
         while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
+            let mut chromosome = enhanced_gen.generate_chromosome_f0();
+            chromosome = self.repair_chromosome(&chromosome);
+            self.population.push(chromosome);
+            generated -= 1;
+        }
+
+        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
             let mut chromosome = enhanced_gen.generate_chromosome_f1();
             chromosome = self.repair_chromosome(&chromosome);
             self.population.push(chromosome);
@@ -113,7 +120,7 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         }
 
         while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
-            let mut chromosome = enhanced_gen.generate_chromosome_f0();
+            let mut chromosome = enhanced_gen.generate_chromosome_f0_and_f1();
             chromosome = self.repair_chromosome(&chromosome);
             self.population.push(chromosome);
             generated -= 1;

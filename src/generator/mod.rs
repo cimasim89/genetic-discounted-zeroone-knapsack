@@ -51,7 +51,7 @@ impl EnhancedChromosomeGenerator {
         }
     }
 
-    pub(crate) fn generate_chromosome_f0(&mut self) -> Chromosome {
+    pub(crate) fn generate_chromosome_f0_and_f1(&mut self) -> Chromosome {
         let mut genes = vec![];
         for i in 0..self.problem.size {
             let mut gene = 0;
@@ -66,6 +66,30 @@ impl EnhancedChromosomeGenerator {
                 if gene == 3 && self.relaxation_result.f_0.contains(&(i as usize, 2)) {
                     gene = 0;
                 }
+            }
+            genes.push(gene);
+        }
+
+        Chromosome {
+            age: 0,
+            genes,
+            fitness: 0,
+        }
+    }
+
+    pub(crate) fn generate_chromosome_f0(&mut self) -> Chromosome {
+        let mut genes = vec![];
+        for i in 0..self.problem.size {
+            let mut gene = 0;
+            gene = self.rng.gen_range(0..4);
+            if gene == 1 && self.relaxation_result.f_0.contains(&(i as usize, 0)) {
+                gene = 2;
+            }
+            if gene == 2 && self.relaxation_result.f_0.contains(&(i as usize, 1)) {
+                gene = 3;
+            }
+            if gene == 3 && self.relaxation_result.f_0.contains(&(i as usize, 2)) {
+                gene = 0;
             }
             genes.push(gene);
         }
