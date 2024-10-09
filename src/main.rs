@@ -28,6 +28,9 @@ struct Args {
     #[arg(short, long, default_value_t = 128)]
     no_upgrade_limit: u8,
 
+    #[arg(short, long, default_value_t = 10)]
+    initial_mutation_factor: u16,
+
     #[arg(short, long, default_value_t = 1)]
     times: u64,
 
@@ -58,6 +61,7 @@ fn main() {
 
     for i in 0..args.times {
         let configuration = ConfigurationByGenerations {
+            initial_mutation_factor: args.initial_mutation_factor,
             no_upgrade_limit: args.no_upgrade_limit,
             population_size,
             seed: i,

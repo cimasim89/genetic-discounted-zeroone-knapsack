@@ -33,11 +33,11 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
             best: Chromosome::init_chromosome(vec![]),
             remain_no_improved_generations: configuration.get_no_upgrade_limit(),
             rng: utils::make_rng(configuration.get_seed()),
-            configuration,
+            mutation_factor: configuration.get_initial_mutation_factor(),
             population: vec![],
             problem,
-            mutation_factor: 10,
             preprocessing_result,
+            configuration,
         }
     }
 
@@ -286,17 +286,11 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
     fn evolve(&mut self) -> (Chromosome, u32) {
         let mut generation: u32 = 0;
         let mut condition = true;
-        let mut current_best: Chromosome = match self.population.first() {
-            None => { panic!("Population has not been initialized!") }
-            Some(c) => {
-                c.clone()
-            }
-        };
 
         while condition {
             info!("Evolving population generation: {} current best fitness: {}", generation, self.best.fitness);
             self.evaluate();
-            current_best = match self.population.first() {
+            let current_best = match self.population.first() {
                 None => { panic!("Problem occurs during evolution!") }
                 Some(c) => {
                     c.clone()

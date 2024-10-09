@@ -26,14 +26,6 @@ impl RandomChromosomeGenerator {
         }
         Chromosome { genes, fitness: 0, age: 0 }
     }
-
-    pub(crate) fn generate_chromosomes(&mut self, quantity: u32) -> Vec<Chromosome> {
-        let mut chromosomes = vec![];
-        for _ in 0..quantity {
-            chromosomes.push(self.generate_chromosome());
-        }
-        chromosomes
-    }
 }
 
 
