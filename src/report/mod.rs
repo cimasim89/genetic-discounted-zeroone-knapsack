@@ -38,12 +38,12 @@ impl CSV {
             row.seed.to_string(),
             row.no_upgrade_limit.to_string(),
             row.population_size.to_string(),
-            row.enhanced.to_string(),
             format!("{}", row.elapsed.as_nanos()),
             row.generation.to_string(),
             row.best_fitness.to_string(),
             row.os_description,
             row.architecture,
+            row.enhanced.to_string(),
         ]
     }
 }
