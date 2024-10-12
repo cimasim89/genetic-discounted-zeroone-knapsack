@@ -30,8 +30,8 @@ struct Args {
     #[arg(short, long, default_value_t = 10)]
     initial_mutation_factor: u16,
 
-    #[arg(short, long, default_value_t = 1)]
-    times: u64,
+    #[arg(short, long, default_value_t = 0)]
+    seed: u64,
 
     #[arg(short, long, default_value = "")]
     result_file_name: String,
@@ -65,49 +65,49 @@ fn initialize_configuration(args: &Args, seed: u64, population_size: u32, enhanc
     }
 }
 
-fn execute_algorithm(args: &Args, problem: &Problem, preprocessing_result: &PreprocessingResult, csv: &report::CSV) {
-    for i in 0..args.times {
-        let configuration = initialize_configuration(
-            args,
-            i,
-            problem.size as u32 * 5,
-            args.enhanced_enabled,
-        );
-        let start = SystemTime::now();
-        let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(
-            problem.clone(),
-            Box::new(configuration),
-            &preprocessing_result,
-        );
-        let solution = executor.run();
-        let elapsed = start.elapsed().unwrap();
-
-        debug!("Solution: {:?}", solution);
-        info!("Elapsed: {:.2?} best: {}", elapsed, solution.fitness);
-
-        Report::generate(
-            csv.clone(),
-            Uuid::new_v4().to_string(),
-            start,
-            args.file_path.clone(),
-            i,
-            args.no_upgrade_limit,
-            problem.size as u32 * 5,
-            &solution,
-            elapsed,
-            args.enhanced_enabled,
-        );
-    }
-}
-
 fn main() {
     let args = parse_args();
     env_logger::Builder::from_env(Env::default().default_filter_or(&args.log_level)).init();
     let problem = initialize_problem(&args.file_path);
-    let mut preprocessor = initialize_preprocessor(&problem);
+
     let csv = report::CSV {
         path: if args.result_file_name.is_empty() { "metrics.csv".to_string() } else { args.result_file_name.clone() },
     };
-    let preprocessing_result = preprocessor.process_problem();
-    execute_algorithm(&args, &problem, &preprocessing_result, &csv);
+
+    let start = SystemTime::now();
+    let mut preprocessing_result = PreprocessingResult::empty();
+    if args.enhanced_enabled {
+        let mut preprocessor = initialize_preprocessor(&problem);
+        preprocessing_result = preprocessor.process_problem();
+    }
+
+    let configuration = initialize_configuration(
+        &args,
+        args.seed,
+        problem.size as u32 * 5,
+        args.enhanced_enabled,
+    );
+    let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(
+        problem.clone(),
+        Box::new(configuration),
+        &preprocessing_result,
+    );
+    let solution = executor.run();
+    let elapsed = start.elapsed().unwrap();
+
+    debug!("Solution: {:?}", solution);
+    info!("Elapsed: {:.2?} best: {}", elapsed, solution.fitness);
+
+    Report::generate(
+        csv.clone(),
+        Uuid::new_v4().to_string(),
+        start,
+        args.file_path.clone(),
+        args.seed,
+        args.no_upgrade_limit,
+        problem.size as u32 * 5,
+        &solution,
+        elapsed,
+        args.enhanced_enabled,
+    );
 }

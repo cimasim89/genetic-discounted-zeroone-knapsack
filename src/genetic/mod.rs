@@ -2,7 +2,6 @@ use crate::generator::{EnhancedChromosomeGenerator, RandomChromosomeGenerator};
 use crate::preprocessing::PreprocessingResult;
 use crate::structure::chromosome::Chromosome;
 use crate::structure::configuration::Configuration;
-use crate::structure::item::Item;
 use crate::structure::problem::Problem;
 use crate::structure::solution::Solution;
 use crate::utils;

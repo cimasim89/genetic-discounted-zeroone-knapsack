@@ -80,8 +80,7 @@ impl EnhancedChromosomeGenerator {
     pub(crate) fn generate_chromosome_f0(&mut self) -> Chromosome {
         let mut genes = vec![];
         for i in 0..self.problem.size {
-            let mut gene = 0;
-            gene = self.rng.gen_range(0..4);
+            let mut gene = self.rng.gen_range(0..4);
             if gene == 1 && self.relaxation_result.f_0.contains(&(i as usize, 0)) {
                 gene = 2;
             }

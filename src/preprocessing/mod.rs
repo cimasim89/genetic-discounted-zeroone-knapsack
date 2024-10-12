@@ -3,7 +3,6 @@ use crate::structure::item::Item;
 use crate::structure::item_preprocessing::ItemPreprocessing;
 use crate::structure::problem::Problem;
 use crate::structure::relaxation_result::LPRelaxationResult;
-use rayon::prelude::*;
 
 pub struct ProblemPreprocessor<'a> {
     problem: &'a Problem,
@@ -12,6 +11,22 @@ pub struct ProblemPreprocessor<'a> {
 pub struct PreprocessingResult {
     pub relaxation_result: LPRelaxationResult,
     pub ub_fix_result: UBFixResult,
+}
+
+impl PreprocessingResult {
+    pub fn new(relaxation_result: LPRelaxationResult, ub_fix_result: UBFixResult) -> Self {
+        PreprocessingResult {
+            relaxation_result,
+            ub_fix_result,
+        }
+    }
+
+    pub fn empty() -> Self {
+        PreprocessingResult {
+            relaxation_result: LPRelaxationResult::empty(),
+            ub_fix_result: UBFixResult::empty(),
+        }
+    }
 }
 
 impl<'a> ProblemPreprocessor<'a> {
@@ -154,16 +169,8 @@ impl<'a> ProblemPreprocessor<'a> {
             }
             j += 1;
         }
-
-
-        LPRelaxationResult {
-            f_0,
-            x,
-            x_up,
-            v_up,
-            v_low,
-            relaxed: relaxed_original,
-        }
+        
+        LPRelaxationResult::new(f_0, x, x_up, v_up, v_low, relaxed_original)
     }
 
     fn ub_fix(&self, lp_relaxation_result: LPRelaxationResult) -> UBFixResult {
@@ -215,11 +222,7 @@ impl<'a> ProblemPreprocessor<'a> {
             }
         }
 
-        UBFixResult {
-            f_1,
-            x_best,
-            v_best: v_low_best,
-        }
+        UBFixResult::new(f_1, x_best, v_low_best)
     }
 
     fn all_zero(x: &[f64; 3]) -> bool {
@@ -236,10 +239,7 @@ impl<'a> ProblemPreprocessor<'a> {
     pub(crate) fn process_problem(&mut self) -> PreprocessingResult {
         let relaxation_result = self.lp_relaxation();
         let ub_fix_result = self.ub_fix(relaxation_result.clone());
-        PreprocessingResult {
-            relaxation_result,
-            ub_fix_result,
-        }
+        PreprocessingResult::new(relaxation_result, ub_fix_result)
     }
 }
 
