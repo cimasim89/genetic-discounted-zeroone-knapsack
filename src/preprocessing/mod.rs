@@ -169,7 +169,7 @@ impl<'a> ProblemPreprocessor<'a> {
             }
             j += 1;
         }
-        
+
         LPRelaxationResult::new(f_0, x, x_up, v_up, v_low, relaxed_original)
     }
 
@@ -216,7 +216,7 @@ impl<'a> ProblemPreprocessor<'a> {
                     v_low_best = res_i.v_low;
                     x_best = res_i.x;
                 }
-                if res_i.v_up.floor() <= v_low_best {
+                if res_i.v_up.ceil() <= v_low_best {
                     f_1.push((index, 1));
                 }
             }
