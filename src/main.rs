@@ -38,6 +38,9 @@ struct Args {
 
     #[arg(short, long, default_value = "info")]
     log_level: String,
+
+    #[arg(short, long, default_value = "false")]
+    enhanced_enabled: bool,
 }
 
 fn parse_args() -> Args {
@@ -52,18 +55,24 @@ fn initialize_preprocessor(problem: &Problem) -> ProblemPreprocessor {
     ProblemPreprocessor::new(problem)
 }
 
-fn initialize_configuration(args: &Args, seed: u64, population_size: u32) -> ConfigurationByGenerations {
+fn initialize_configuration(args: &Args, seed: u64, population_size: u32, enhanced_enabled: bool) -> ConfigurationByGenerations {
     ConfigurationByGenerations {
         initial_mutation_factor: args.initial_mutation_factor,
         no_upgrade_limit: args.no_upgrade_limit,
         population_size,
         seed,
+        enhanced_enabled,
     }
 }
 
 fn execute_algorithm(args: &Args, problem: &Problem, preprocessing_result: &PreprocessingResult, csv: &report::CSV) {
     for i in 0..args.times {
-        let configuration = initialize_configuration(args, i, problem.size as u32 * 5);
+        let configuration = initialize_configuration(
+            args,
+            i,
+            problem.size as u32 * 5,
+            args.enhanced_enabled,
+        );
         let start = SystemTime::now();
         let mut executor = <KnapsackGeneticAlgorithm as GeneticAlgorithm>::init(
             problem.clone(),
@@ -86,6 +95,7 @@ fn execute_algorithm(args: &Args, problem: &Problem, preprocessing_result: &Prep
             problem.size as u32 * 5,
             &solution,
             elapsed,
+            args.enhanced_enabled,
         );
     }
 }

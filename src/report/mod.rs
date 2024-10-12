@@ -8,6 +8,7 @@ pub(crate) struct Metric {
     architecture: String,
     best_fitness: i64,
     elapsed: Duration,
+    enhanced: bool,
     file_name: String,
     generation: u32,
     instance: String,
@@ -73,11 +74,14 @@ impl Report {
                                         no_upgrade_limit: u8,
                                         population_size: u32,
                                         solution: &Solution,
-                                        duration: Duration) {
+                                        duration: Duration,
+                                        enhanced: bool,
+    ) {
         let metric = Metric {
             architecture: env::consts::ARCH.to_string(),
             best_fitness: solution.fitness,
             elapsed: duration,
+            enhanced,
             file_name,
             generation: solution.generations,
             instance,

@@ -91,41 +91,42 @@ impl<'a> KnapsackGeneticAlgorithm<'a> {
         let mut generated = self.configuration.get_population_size();
         let best_preprocess = self.preprocessing_result.ub_fix_result.x_best.clone();
 
-        if !best_preprocess.is_empty() {
-            let mut chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
-            chromosome = self.repair_chromosome(&chromosome);
-            self.population.push(chromosome);
-            generated -= 1;
+        if self.configuration.is_enhanced_enabled() {
+            if !best_preprocess.is_empty() {
+                let mut chromosome = KnapsackGeneticAlgorithm::map_preprocessed_item_to_chromosome(best_preprocess);
+                chromosome = self.repair_chromosome(&chromosome);
+                self.population.push(chromosome);
+                generated -= 1;
+            }
+
+            let mut enhanced_gen = EnhancedChromosomeGenerator::new(
+                self.problem.clone(),
+                self.configuration.get_seed(),
+                self.preprocessing_result.relaxation_result.clone(),
+                self.preprocessing_result.ub_fix_result.clone(),
+            );
+
+            while generated > (self.configuration.get_population_size() as f64 * 0.95).floor() as u32 {
+                let mut chromosome = enhanced_gen.generate_chromosome_f0();
+                chromosome = self.repair_chromosome(&chromosome);
+                self.population.push(chromosome);
+                generated -= 1;
+            }
+
+            while generated > (self.configuration.get_population_size() as f64 * 0.95).floor() as u32 {
+                let mut chromosome = enhanced_gen.generate_chromosome_f1();
+                chromosome = self.repair_chromosome(&chromosome);
+                self.population.push(chromosome);
+                generated -= 1;
+            }
+
+            while generated > (self.configuration.get_population_size() as f64 * 0.975).floor() as u32 {
+                let mut chromosome = enhanced_gen.generate_chromosome_f0_and_f1();
+                chromosome = self.repair_chromosome(&chromosome);
+                self.population.push(chromosome);
+                generated -= 1;
+            }
         }
-
-        let mut enhanced_gen = EnhancedChromosomeGenerator::new(
-            self.problem.clone(),
-            self.configuration.get_seed(),
-            self.preprocessing_result.relaxation_result.clone(),
-            self.preprocessing_result.ub_fix_result.clone(),
-        );
-
-        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
-            let mut chromosome = enhanced_gen.generate_chromosome_f0();
-            chromosome = self.repair_chromosome(&chromosome);
-            self.population.push(chromosome);
-            generated -= 1;
-        }
-
-        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
-            let mut chromosome = enhanced_gen.generate_chromosome_f1();
-            chromosome = self.repair_chromosome(&chromosome);
-            self.population.push(chromosome);
-            generated -= 1;
-        }
-
-        while generated > (self.configuration.get_population_size() as f64 * 0.9).floor() as u32 {
-            let mut chromosome = enhanced_gen.generate_chromosome_f0_and_f1();
-            chromosome = self.repair_chromosome(&chromosome);
-            self.population.push(chromosome);
-            generated -= 1;
-        }
-
         while generated > 0 {
             let mut chromosome = RandomChromosomeGenerator::new(self.problem.clone(), self.configuration.get_seed()).generate_chromosome();
             chromosome = self.repair_chromosome(&chromosome);
