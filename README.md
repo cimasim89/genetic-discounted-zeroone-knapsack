@@ -26,7 +26,7 @@ cargo run -- -h
 | **name**           | **arg**                      | **Type** | **default** | **required** | **Description**                                                |
 |--------------------|------------------------------|----------|-------------|--------------|----------------------------------------------------------------|
 | file-path          | -f --file-path               | string   |             | true         | Input file path                                                |
-| times              | -t --times                   | integer  | 1           | false        | Algorithm will be repeated {times} with incremental seed       | 
+| seed               | -s --seed                    | integer  | 0           | false        | Algorithm will it as seed for random generator                 | 
 | version            | -V --version                 | NA       |             | false        | Program version                                                |
 | help               | -h --help                    | NA       |             | false        | Show help                                                      |
 | initial mut factor | -i --initial-mutation-factor | integer  | 10          | false        | Initial mutation factor, it will decrease every 10 generations |
