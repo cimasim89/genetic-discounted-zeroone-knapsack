@@ -8,6 +8,7 @@ pub(crate) struct Metric {
     architecture: String,
     best_fitness: i64,
     elapsed: Duration,
+    enhanced: bool,
     file_name: String,
     generation: u32,
     instance: String,
@@ -22,6 +23,8 @@ pub(crate) trait Exporter {
     fn export(&self, row: Metric);
 }
 
+
+#[derive(Clone)]
 pub(crate) struct CSV {
     pub(crate) path: String,
 }
@@ -40,6 +43,7 @@ impl CSV {
             row.best_fitness.to_string(),
             row.os_description,
             row.architecture,
+            row.enhanced.to_string(),
         ]
     }
 }
@@ -71,11 +75,14 @@ impl Report {
                                         no_upgrade_limit: u8,
                                         population_size: u32,
                                         solution: &Solution,
-                                        duration: Duration) {
+                                        duration: Duration,
+                                        enhanced: bool,
+    ) {
         let metric = Metric {
             architecture: env::consts::ARCH.to_string(),
             best_fitness: solution.fitness,
             elapsed: duration,
+            enhanced,
             file_name,
             generation: solution.generations,
             instance,

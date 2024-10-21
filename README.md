@@ -23,16 +23,16 @@ cargo run -- -h
 
 ## Arguments
 
-| **name**         | **arg**               | **Type** | **default** | **required** | **Description**                               |
-|------------------|-----------------------|----------|-------------|--------------|-----------------------------------------------|
-| file-path        | -f --file-path        | string   |             | true         | Input file path                               |
-| seed             | -s --seed             | integer  | 1           | false        | Seed used for random initialization           | 
-| version          | -V --version          | NA       |             | false        | Program version                               |
-| help             | -h --help             | NA       |             | false        | Show help                                     |
-| population size  | -p --population-size  | integer  | 500         | false        | Dimension of generated population             |
-| no upgrade limit | -n --no-upgrade-limit | integer  | 10          | false        | Number of generations without fitness upgrade |
-| result file name | -r --result_file_name | string   | metrics.csv | false        | .csv file where metrics will be stored        |
-| log level        | -l --log-level        | string   | info        | false        | application log level                         |
+| **name**           | **arg**                      | **Type** | **default** | **required** | **Description**                                                |
+|--------------------|------------------------------|----------|-------------|--------------|----------------------------------------------------------------|
+| file-path          | -f --file-path               | string   |             | true         | Input file path                                                |
+| times              | -t --times                   | integer  | 1           | false        | Algorithm will be repeated {times} with incremental seed       | 
+| version            | -V --version                 | NA       |             | false        | Program version                                                |
+| help               | -h --help                    | NA       |             | false        | Show help                                                      |
+| initial mut factor | -i --initial-mutation-factor | integer  | 10          | false        | Initial mutation factor, it will decrease every 10 generations |
+| no upgrade limit   | -n --no-upgrade-limit        | integer  | 10          | false        | Number of generations without fitness upgrade                  |
+| result file name   | -r --result_file_name        | string   | metrics.csv | false        | .csv file where metrics will be stored                         |
+| log level          | -l --log-level               | string   | info        | false        | application log level                                          |
 
 ## Massive Test
 

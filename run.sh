@@ -34,9 +34,13 @@ function test_all {
     if [ -d "$folder" ]; then
       for file in "$folder"/*; do
         if [ -f "$file" ]; then
-          for seed in {1..10}; do
-            echo "Running cargo for $file with seed $seed"
+          for seed in {0..9}; do
+            echo "Running cargo for $file with seed $seed not enhanced population"
             cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error"
+          done
+          for seed in {0..9}; do
+            echo "Running cargo for $file with seed $seed enhanced popualtion "
+            cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error" -e
           done
         fi
       done
@@ -53,12 +57,14 @@ function test_specific_instance {
 
   echo "metrics saved in $csv_file"
   for file in instances/$instance_kind/*; do
-    if [ -f "$file" ]; then
-      for seed in {1..10}; do
-        echo "Running cargo for $file with seed $seed"
-        cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error"
-      done
-    fi
+    for seed in {0..9}; do
+      echo "Running cargo for $file with seed $seed not enhanced population"
+      cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error"
+    done
+    for seed in {0..9}; do
+      echo "Running cargo for $file with seed $seed enhanced popualtion "
+      cargo run -r -- -f "$file" -s "$seed" -r "$csv_file" -l "error" -e
+    done
   done
 
   echo "metrics saved in $csv_file"
