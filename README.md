@@ -33,6 +33,7 @@ cargo run -- -h
 | no upgrade limit   | -n --no-upgrade-limit        | integer  | 10          | false        | Number of generations without fitness upgrade                  |
 | result file name   | -r --result_file_name        | string   | metrics.csv | false        | .csv file where metrics will be stored                         |
 | log level          | -l --log-level               | string   | info        | false        | application log level                                          |
+| enhanced enabled   | -e --enhanced-enabled        | bool     | false       | false        | enable initial population enhance                              |
 
 ## Massive Test
 

@@ -159,6 +159,8 @@ impl<'a> ProblemPreprocessor<'a> {
             j += 1;
         }
 
+        j = 0;
+
         while j < ((3 * m) - (f_0.len() as i32)) as usize {
             let i = relaxed[j].set_index;
             let k = relaxed[j].inner_index;
@@ -216,8 +218,10 @@ impl<'a> ProblemPreprocessor<'a> {
                     v_low_best = res_i.v_low;
                     x_best = res_i.x;
                 }
-                if res_i.v_up.ceil() <= v_low_best {
+                if res_i.v_up.floor() <= v_low_best {
                     f_1.push((index, 1));
+                } else {
+                    print!("{} ", index);
                 }
             }
         }
